@@ -1,0 +1,6 @@
+hidden_sizes:
+- 500
+- 250
+- 125
+input_size: 1
+output_size: 1

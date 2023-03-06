@@ -1,0 +1,4 @@
+hidden_sizes:
+- 64
+input_size: 1
+output_size: 1

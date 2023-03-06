@@ -1,0 +1,5 @@
+bias: true
+hidden_size: 64
+input_size: 1
+n_degree: 3
+output_size: 1
