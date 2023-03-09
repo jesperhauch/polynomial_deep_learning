@@ -3,22 +3,24 @@ import pytorch_lightning as pl
 import torch
 from typing import List
 
-class SquareActivation(nn.Module):
-    def __init__(self):
+class PolynomialActivation(nn.Module):
+    def __init__(self, pow: int = 2):
         super().__init__()
+        self.power = pow
 
     def forward(self, x):
-        return torch.square(x)
+        return torch.pow(x, self.power)
 
 class FeedForwardNN(pl.LightningModule):
     def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int):
         super(FeedForwardNN, self).__init__()
-        modules = [nn.Linear(input_size, hidden_sizes[0])]
-        for i in range(len(hidden_sizes[:-1])):
+        n_layers = [input_size] + hidden_sizes
+        modules = []
+        for i in range(len(n_layers)-1):
+            modules.append(nn.Linear(n_layers[i], n_layers[i+1]))
             modules.append(nn.ReLU(inplace=True))
-            modules.append(nn.Linear(hidden_sizes[i], hidden_sizes[i+1]))
 
-        modules.append(nn.Linear(hidden_sizes[-1], output_size))
+        modules.append(nn.Linear(n_layers[-1], output_size))
         self.layers = nn.Sequential(*modules)
         self.loss = nn.MSELoss()
         self.save_hyperparameters()
@@ -45,14 +47,15 @@ class FeedForwardNN(pl.LightningModule):
         return loss
 
 class PolynomialNN(FeedForwardNN):
-    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int):
+    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, n_pow: int = 2):
         super(FeedForwardNN, self).__init__()
-        modules = [nn.Linear(input_size, hidden_sizes[0])]
-        for i in range(len(hidden_sizes[:-1])):
-            modules.append(SquareActivation())
-            modules.append(nn.Linear(hidden_sizes[i], hidden_sizes[i+1]))
+        n_layers = [input_size] + hidden_sizes
+        modules = []
+        for i in range(len(n_layers)-1):
+            modules.append(nn.Linear(n_layers[i], n_layers[i+1]))
+            modules.append(PolynomialActivation(n_pow))
 
-        modules.append(nn.Linear(hidden_sizes[-1], output_size))
+        modules.append(nn.Linear(n_layers[-1], output_size))
         self.layers = nn.Sequential(*modules)
         self.loss = nn.MSELoss()
         self.save_hyperparameters()
@@ -82,7 +85,7 @@ class RNN(pl.LightningModule):
         return loss
 
 if __name__ == "__main__":
-    model = PolynomialNN(1, [500, 250, 125], 1)
-    test = SquareActivation()
+    model = PolynomialNN(1, [64], 1, 3)
+    test = PolynomialActivation(3)
     data = torch.randn((32,1))
     model(data)
