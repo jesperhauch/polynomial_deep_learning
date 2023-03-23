@@ -1,0 +1,4 @@
+- Non-deterministic does not always enable models to generalize better
+- Non-deterministic training does not help for complicated polynomials
+- Models are able to fit up until 7 variables
+- Performance is breaking for 6th degree polynomials

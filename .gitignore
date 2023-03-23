@@ -1,2 +1,2 @@
 tb_logs/
-__pycache__/
+*/__pycache__/*
