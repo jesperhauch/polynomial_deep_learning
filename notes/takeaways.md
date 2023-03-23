@@ -81,6 +81,9 @@ Models trained on non-deterministic Normal(0,5) data are still generalizing well
 **Overall**
 CCP models trained on Normal(0,5) are able to generalize OOD.
 
+# 2a2\*b2\*c2 - 3c
+Models cannot fit the polynomial at all. Overflow encountered for some networks during testing.
+
 # a\*b\*c+d-e-f-g
 * Generally
     * Able to fit OOD.
@@ -96,7 +99,6 @@ CCP models trained on Normal(0,5) are able to generalize OOD.
 Models trained on Normal(0,1) perform better than Normal(0,5). CCP models are better than PolynomialNN.
 
 # abcdefg
-**Overall**
 Models cannot fit the polynomial at all. Training curves are decreasing but validation curves are increasing. R2 is negative and MAE is extremely high.
 
 # a10-b9

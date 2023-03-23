@@ -1,12 +1,12 @@
 import shlex, subprocess
 
 commands = []
-#models = ["ccp", "polynomial_nn"]
+models = ["ccp", "polynomial_nn"]
 noise = [False, True]
 change_std = [False, True]
 
-polynomial = "lambda a, b: a**10-b**9"
-polynomial_name = "a10-b9"
+polynomial = "lambda a, b, c, d: 2*(a**2)*(b**2)*c**2 - 3*c"
+polynomial_name = "2a2_b2_c2-3c"
 n_degree = 10
 epochs = 50
 
