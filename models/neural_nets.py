@@ -2,7 +2,7 @@ import torch.nn as nn
 import pytorch_lightning as pl
 import torch
 from typing import List
-from sklearn.metrics import r2_score, mean_absolute_error, mean_absolute_percentage_error
+from sklearn.metrics import r2_score, mean_absolute_error, mean_absolute_percentage_error, mean_squared_error
 
 class PolynomialActivation(nn.Module):
     def __init__(self, pow: int = 2):
@@ -19,7 +19,7 @@ class FeedForwardNN(pl.LightningModule):
         modules = []
         for i in range(len(n_layers)-1):
             modules.append(nn.Linear(n_layers[i], n_layers[i+1]))
-            modules.append(nn.ReLU(inplace=True))
+            #modules.append(nn.ReLU(inplace=True))
 
         modules.append(nn.Linear(n_layers[-1], output_size))
         self.layers = nn.Sequential(*modules)
@@ -46,6 +46,7 @@ class FeedForwardNN(pl.LightningModule):
         loss = self.loss(y_hat, y)
         self.log('val_loss', loss, on_epoch=True)
         self.log('val_r2', r2_score(y, y_hat), on_epoch=True)
+        self.log('val_rmse', mean_squared_error(y, y_hat, squared=False), on_epoch=True)
         return loss
     
     def test_step(self, batch, batch_idx, dataloader_idx=0):
@@ -54,6 +55,7 @@ class FeedForwardNN(pl.LightningModule):
         self.log('test_r2', r2_score(y, y_hat))
         self.log('test_mae', mean_absolute_error(y, y_hat))
         self.log("test_mape", mean_absolute_percentage_error(y, y_hat))
+        self.log("test_rmse", mean_squared_error(y, y_hat, squared=False))
         return 
 
 class PolynomialNN(FeedForwardNN):

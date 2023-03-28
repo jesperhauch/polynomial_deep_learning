@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
@@ -13,7 +13,7 @@
             "justMyCode": true,
         },
         {
-            "name": "Python: Training",
+            "name": "Training",
             "type": "python",
             "request": "launch",
             "program": "${file}",
@@ -24,6 +24,15 @@
                 "--polynomial=lambda x,y:5*x**2+6*y**2",
                 "--polynomial_name=5x2+6y2"
             ]
+        },
+        {
+            "name": "Models",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
         }
     ]
 }
