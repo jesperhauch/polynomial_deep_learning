@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
 import torch.nn.functional as F
 from models.neural_nets import FeedForwardNN, PolynomialActivation
 
 class CCP(FeedForwardNN):
-    def __init__(self, input_size=2, hidden_size=16, n_degree=4, output_size=1, bias=True):
+    def __init__(self, input_size=2, hidden_size=16, n_degree=4, output_size=1, bias=True, **kwargs):
         """
         This is the initialization function of the network, which in this case is a polynomial network.
         The implementation here relies on the CCP model of $\Pi$-nets. 
@@ -38,7 +37,7 @@ class CCP_relu(CCP):
         return out.squeeze()
 
 class CCP_relu_poly(CCP):
-    def __init__(self, input_size=2, hidden_size=16, n_degree=4, output_size=1, bias=True):
+    def __init__(self, input_size=2, hidden_size=16, n_degree=4, output_size=1, bias=True, **kwargs):
         super().__init__(input_size, hidden_size, n_degree, output_size)
         self.poly_transfer = PolynomialActivation(n_degree)
 
@@ -51,7 +50,7 @@ class CCP_relu_poly(CCP):
         return out.squeeze()
 
 class PDC(FeedForwardNN):
-    def __init__(self, input_size=2, hidden_size=16, n_degree=4, output_size=1, bias=True):
+    def __init__(self, input_size=2, hidden_size=16, n_degree=4, output_size=1, bias=True, **kwargs):
         """
         This is the initialization function of the network, which in this case is a polynomial network.
         The implementation here relies on the PDC. 
@@ -81,7 +80,7 @@ class PDC(FeedForwardNN):
         return out.squeeze()
     
 class PDCLow(FeedForwardNN):
-    def __init__(self, input_size=2, hidden_size=16, n_degree=4, output_size=1, bias=True):
+    def __init__(self, input_size=2, hidden_size=16, n_degree=4, output_size=1, bias=True, **kwargs):
         """
         This is the initialization function of the network, which in this case is a polynomial network.
         The implementation here relies on the PDC. 

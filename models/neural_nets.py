@@ -13,7 +13,7 @@ class PolynomialActivation(nn.Module):
         return torch.pow(x, self.power)
 
 class FeedForwardNN(pl.LightningModule):
-    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int):
+    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, **kwargs):
         super(FeedForwardNN, self).__init__()
         n_layers = [input_size] + hidden_sizes
         modules = []
@@ -55,11 +55,10 @@ class FeedForwardNN(pl.LightningModule):
         self.log('test_r2', r2_score(y, y_hat))
         self.log('test_mae', mean_absolute_error(y, y_hat))
         self.log("test_mape", mean_absolute_percentage_error(y, y_hat))
-        self.log("test_rmse", mean_squared_error(y, y_hat, squared=False))
-        return 
+        self.log("test_rmse", mean_squared_error(y, y_hat, squared=False)) 
 
 class PolynomialNN(FeedForwardNN):
-    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, n_pow: int = 2):
+    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, n_degree: int = 2, **kwargs):
         super(FeedForwardNN, self).__init__()
         modules = []
         modules.append(nn.Linear(input_size, hidden_sizes[0]))
@@ -67,7 +66,7 @@ class PolynomialNN(FeedForwardNN):
         for i in range(len(hidden_sizes)-1):
             modules.append(nn.Linear(hidden_sizes[i], hidden_sizes[i+1]))
         
-        modules.append(PolynomialActivation(n_pow))
+        modules.append(PolynomialActivation(n_degree))
         modules.append(nn.Linear(hidden_sizes[-1], output_size))
         
         self.layers = nn.Sequential(*modules)
@@ -75,7 +74,7 @@ class PolynomialNN(FeedForwardNN):
         self.save_hyperparameters()
 
 class PolynomialNN_each(FeedForwardNN):
-    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int):
+    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, **kwargs):
         super(FeedForwardNN, self).__init__()
         n_layers = [input_size] + hidden_sizes
         modules = []
@@ -89,7 +88,7 @@ class PolynomialNN_each(FeedForwardNN):
         self.save_hyperparameters()
 
 class PolynomialNN_relu(FeedForwardNN):
-    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, n_pow: int = 2):
+    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, n_pow: int = 2, **kwargs):
         super(FeedForwardNN, self).__init__()
         modules = []
         modules.append(nn.Linear(input_size, hidden_sizes[0]))
