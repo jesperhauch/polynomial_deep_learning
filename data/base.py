@@ -45,7 +45,8 @@ class BaseClass:
         self.test_targets = target_scaler.transform(self.test_targets)
 
     def n_features(self):
-        return self.features.shape[1]
+        assert self.train_features.shape[1] == self.test_features.shape[1]
+        return self.train_features.shape[1]
 
     def train_test_split(self, n_data):
         self.train_indices = torch.arange(*(self.train_quantiles*n_data)).to(torch.int64)
