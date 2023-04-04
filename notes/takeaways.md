@@ -9,7 +9,12 @@
 7. Normal(90, 5)
 8. Normal(90, 25)
 
-# 5a2 + 6b2
+Samples from test dataloaders tend to blow up in magnitude. Especially 0, 1, 2, 6, 7, 8
+
+# Preliminary experiments
+Beware that all the variables follow the same Gaussian/normal distribution. This means that higher-order polynomials will explode in magnitude.
+
+## 5a2 + 6b2
 * PolynomialNN
     * Generally
         * Able to generalize OOO after 30 epochs
@@ -32,7 +37,7 @@
 **Overall**
 Models are able to generalize for $5a^2+6b^2$ pretty well. Some drops in performance is seen in CCP, whereas PolynomialNN maintains great performance throughout.
 
-# 2a3 * 6b2
+## 2a3 * 6b2
 * PolynomialNN
     * Deterministic
         * Learning curves for validation look odd for R2. Models peak before plummeting
@@ -57,7 +62,7 @@ Models are able to generalize for $5a^2+6b^2$ pretty well. Some drops in perform
 PolynomialNN is no longer able to generalize OOO and performs worse when more layers are added. It does not work to have a polynomial output functions and no activations.
 CCP is mostly good at it across dataloaders, but we see the model struggle more for interactions. Adding ReLUs to CCP leads to worse performance allround.
 
-# 2a3*b2 - 3c
+## 2a3*b2 - 3c
 * Generally
     * High MAE, Low MAPE and high R2 generally
 * Normal(0,5)
@@ -69,7 +74,7 @@ CCP is mostly good at it across dataloaders, but we see the model struggle more 
 **Overall**
 Models trained on non-deterministic Normal(0,5) data are still generalizing well. CCP on deterministic Normal(0,5) performs great as well.
 
-# 2a3*b3 - 3c
+## 2a3*b3 - 3c
 * Normal(0,5)
     * Polynomial NN outperforms  CCP in Normal(90,5)
     * CCP is mostly generalizing well in deterministic case
@@ -81,8 +86,23 @@ Models trained on non-deterministic Normal(0,5) data are still generalizing well
 **Overall**
 CCP models trained on Normal(0,5) are able to generalize OOD.
 
-# 2a2\*b2\*c2 - 3c
-Models cannot fit the polynomial at all. Overflow encountered for some networks during testing.
+## 2a2\*b2\*c2 - 3c
+CCP and PolynomialNN cannot fit the polynomial at all. Overflow encountered for some networks during testing.
+
+## 2a2\*b2\*c2 - 3d
+PDC and CCP can generalize.
+
+## 2a3_b2_c2-d6
+PDC and CCP has okay generalization on half the data loaders after 100 epochs.
+
+## a3_b2_c3-d3_e3
+CCP is the superior model. Generalized on half the dataloaders after 100 epochs for Normal(0,5) training. Weird phenomena that better performance is seen on some test sets than on the training set...
+
+## a3_b3_c3-d4_e4
+Models cannot generalize. Best test performance is MAPE around 1 for a small amount of datasets.
+
+# 2a3_b2_c2_d3-e5_f5
+Models cannot learn and produces NaN for most dataloaders.
 
 # a\*b\*c+d-e-f-g
 * Generally
@@ -96,7 +116,7 @@ Models cannot fit the polynomial at all. Overflow encountered for some networks 
     * Models fail for Normal(90,1)
 
 **Overall**
-Models trained on Normal(0,1) perform better than Normal(0,5). CCP models are better than PolynomialNN.
+Models trained on Normal(0,5) perform better than Normal(0,1). CCP models are better than PolynomialNN.
 
 # abcdefg
 Models cannot fit the polynomial at all. Training curves are decreasing but validation curves are increasing. R2 is negative and MAE is extremely high.

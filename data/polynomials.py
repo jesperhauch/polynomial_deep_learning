@@ -24,7 +24,7 @@ class NormalGenerator:
             target_samples = target_samples + self.noise_dist.sample((self.n_data,))
         return feature_samples, target_samples
     
-    def generate_test_data(self) -> List:
+    def generate_test_data(self) -> List[TensorDataset]:
         test_sets = []
         for mu in self.means:
             for std in self.stds:
@@ -68,11 +68,8 @@ class PolynomialModule(pl.LightningDataModule): # TODO: Rewrite to have sample g
         return [DataLoader(dataset, batch_size=32, num_workers=0) for dataset in self.test_sets]
 
 if __name__ == "__main__":
-    poly = lambda a, b, c, d, e, f: 2*(a**3)*(b**2)*(c**2)*(d**3) - (e**5)*(f**5)
-    #poly = lambda a, b, c, d: 2*(a**3)*(b**2)*(c**2) - 3*d
-    data_gen = NormalGenerator(poly, poly.__code__.co_argcount, 50000, -50, 1, False)
+    from simulation_functions import ShortColumn, SulfurModel
+    data_gen = ShortColumn(100000)
     data = PolynomialModule(data_gen)
     data.setup("fit")
     train = data.train_dataloader()
-    data.setup("test")
-    test = data.test_dataloader()
