@@ -16,23 +16,23 @@
             "name": "Training",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "training.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--model=polynomial_nn",
-                "--polynomial=lambda x,y:5*x**2+6*y**2",
-                "--polynomial_name=5x2+6y2"
+                "--model=PolynomialNN",
+                "--data_gen=Currin",
+                "--epochs=30"
             ]
         },
         {
-            "name": "Models",
+            "name": "Models & Data",
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": true,
+            "env": { "PYTHONPATH": "${workspaceRoot}"}
         }
     ]
 }
