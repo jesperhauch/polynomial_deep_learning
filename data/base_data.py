@@ -4,7 +4,8 @@ from torch.utils.data import TensorDataset
 from typing import Tuple, List
 from data.utils import StandardScaler, shuffle_2d_tensor
 
-class BaseClass:
+class BaseDataClass:
+    noise_dist = dist.normal.Normal(0,1)
     train_quantiles = torch.tensor([0.05, 0.95]) # assumes 90/10 train-test split
     def __init__(self, n_data: int, noise: bool = False, standardize: bool = False):
         # Train test split
@@ -23,10 +24,10 @@ class BaseClass:
 
         # Add noise and standardize if necessary
         if noise:
-            self.train_features = self.train_features + dist.normal.Normal(0,1).sample(self.train_features.shape)
-            self.test_features = self.test_features + dist.normal.Normal(0,1).sample(self.test_features.shape)
-            self.train_targets = self.train_targets + dist.normal.Normal(0,1).sample(self.train_targets.shape)
-            self.test_targets = self.test_targets + dist.normal.Normal(0,1).sample(self.test_targets.shape)
+            self.train_features = self.train_features + self.noise_dist.sample(self.train_features.shape)
+            self.test_features = self.test_features + self.noise_dist.sample(self.test_features.shape)
+            self.train_targets = self.train_targets + self.noise_dist.sample(self.train_targets.shape)
+            self.test_targets = self.test_targets + self.noise_dist.sample(self.test_targets.shape)
         if standardize:
             self.standardize_features()
 

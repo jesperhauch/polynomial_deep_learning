@@ -1,9 +1,9 @@
 import torch.distributions as dist
-from data.base import BaseClass
+from data.base_data import BaseDataClass
 import torch
 import numpy as np
 
-class SteelColumn(BaseClass):
+class SteelColumn(BaseDataClass):
     """Steel Column Function from https://www.sfu.ca/~ssurjano/steelcol.html
     """
     # Fixed values
@@ -26,7 +26,7 @@ class SteelColumn(BaseClass):
         term_2 = F_0*E_b / (self.B*self.D*self.H*(E_b-P))
         return F_s - P*(term_1 + term_2)
 
-class SulfurModel(BaseClass):
+class SulfurModel(BaseDataClass):
     """Sulfur Model Function from https://www.sfu.ca/~ssurjano/sulf.html
     """
     # Fixed values
@@ -49,7 +49,7 @@ class SulfurModel(BaseClass):
         expr = -0.5*self.S_0**2*(1-A_c)*T_r**2*(1-R_s)**2*beta*Psi_e*f_Psi_e*term1
         return expr
 
-class ShortColumn(BaseClass):
+class ShortColumn(BaseDataClass):
     """Short Column Function from https://www.sfu.ca/~ssurjano/shortcol.html
     """
     # Fixed values
@@ -65,11 +65,11 @@ class ShortColumn(BaseClass):
         term2 = P**2/(self.b**2*self.h**2*self.Y**2)
         return 1-term1-term2
 
-class Bukin06(BaseClass):
+class Bukin06(BaseDataClass):
     """https://infinity77.net/global_optimization/test_functions_nd_B.html#go_benchmark.Bukin06
 
     Args:
-        BaseClass (_type_): _description_
+        BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
         x_1 = dist.uniform.Uniform(-15,-5).sample((n_data,))
@@ -79,11 +79,11 @@ class Bukin06(BaseClass):
     def calculate_targets(self, x1, x2):
         return 100*torch.sqrt(torch.abs(x2-0.01*x1**2))+0.01*torch.abs(x1+10)
 
-class Currin(BaseClass):
+class Currin(BaseDataClass):
     """From https://www.sfu.ca/~ssurjano/curretal91.html
 
     Args:
-        BaseClass (_type_): _description_
+        BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
         return dist.uniform.Uniform(0, 1).sample((n_data, 2))
@@ -100,11 +100,11 @@ class LimPolynomial(Currin):
     def calculate_targets(self, x_1, x_2) -> torch.Tensor:
         return 9. + 5/2*x_1 - 35/2*x_2 + 5/2*x_1*x_2 + 19*x_2**2 - 15/2*x_1**3 - 5/2*x_1*x_2 - 11/2*x_2**4 + x_1**3*x_2**2
 
-class Colville(BaseClass):
+class Colville(BaseDataClass):
     """https://arxiv.org/pdf/1308.4008.pdf
 
     Args:
-        BaseClass (_type_): _description_
+        BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
         return dist.uniform.Uniform(-10, 10).sample((n_data, 4))
@@ -113,11 +113,11 @@ class Colville(BaseClass):
         expr = 100*(x1**2-x2)**2 + (x1-1)**2 + (x3-1)**2 + 90*(x3**2-x4)**2 + 10.1*((x2-1)**2 + (x4-1)**2)+19.8*(x2-1)*(x4-1)
         return expr
 
-class DettePepelyshev(BaseClass):
+class DettePepelyshev(BaseDataClass):
     """https://www.sfu.ca/~ssurjano/detpep10curv.html
 
     Args:
-        BaseClass (_type_): _description_
+        BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
         return dist.uniform.Uniform(0, 1).sample((n_data, 3))
@@ -126,11 +126,11 @@ class DettePepelyshev(BaseClass):
         expr = 4*(x1-2+8*x2-8*x2**2)**2 + (3-4*x2)**2 + 16*torch.sqrt(x3+1)*(2*x3-1)**2
         return expr
 
-class Beale(BaseClass):
+class Beale(BaseDataClass):
     """https://arxiv.org/pdf/1308.4008.pdf
 
     Args:
-        BaseClass (_type_): _description_
+        BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
         return dist.uniform.Uniform(-4.5, 4.5).sample((n_data, 2))
@@ -139,11 +139,11 @@ class Beale(BaseClass):
         expr = (x1*x2-x1+1.5)**2 + (x1*x2**2-x1 + 2.25)**2 + (x1*x2**3-x1+2.625)**2
         return expr
 
-class Price03(BaseClass):
+class Price03(BaseDataClass):
     """https://arxiv.org/pdf/1308.4008.pdf
 
     Args:
-        BaseClass (_type_): _description_
+        BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
         return dist.uniform.Uniform(-500, 500).sample((n_data, 2))
@@ -151,11 +151,11 @@ class Price03(BaseClass):
     def calculate_targets(self, x1, x2):
         return 100*(x2-x1**2)**2+6*(6.4*(x2-0.5)**2-x1-0.6)**2
 
-class CamelThreeHump(BaseClass):
+class CamelThreeHump(BaseDataClass):
     """https://ieeexplore.ieee.org/document/5391457
 
     Args:
-        BaseClass (_type_): _description_
+        BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
         return dist.uniform.Uniform(-5, 5).sample((n_data, 2))
@@ -163,11 +163,11 @@ class CamelThreeHump(BaseClass):
     def calculate_targets(self, x1, x2) -> torch.Tensor:
         return 2*x1**2 - 1.05*x1**4 + (x1**6)/6 + x1*x2 + x2**2
     
-class GoldsteinPrice(BaseClass):
+class GoldsteinPrice(BaseDataClass):
     """https://arxiv.org/pdf/1308.4008.pdf
 
     Args:
-        BaseClass (_type_): _description_
+        BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
         return dist.uniform.Uniform(-2, 2).sample((n_data, 2))

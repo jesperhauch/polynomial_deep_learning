@@ -20,9 +20,20 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--model=PolynomialNN",
-                "--data_gen=Currin",
-                "--epochs=30"
+                "--model=LinearRegression",
+                "--data_gen=Currin"
+            ]
+        },
+        {
+            "name": "Baseline Training",
+            "type": "python",
+            "request": "launch",
+            "program": "baseline_training.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--model=LinearRegression",
+                "--data_gen=Currin"
             ]
         },
         {

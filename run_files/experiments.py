@@ -4,8 +4,8 @@ commands = []
 models = ["pdc", "pdclow", "ccp"]
 change_std = [False, True]
 
-polynomial = "lambda a, b, c, d: 2*(a**3)*(b**2)*(c**3) - d**7"
-polynomial_name = "2a3_b2_c3-d7"
+polynomial = "lambda a, b, c, d, e: (a**3)*(b**3)*(c**3) - d**4*e**4"
+polynomial_name = "a3_b3_c3-d4_e4"
 n_degree = 8
 epochs = 100
 
