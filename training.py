@@ -1,6 +1,6 @@
 from models.neural_nets import *
 from models.pi_nets import *
-from models.temporal_models import *
+from models.baselines import *
 from utils.model_utils import *
 from utils.logging_helper import run_information
 from data.polynomials import *

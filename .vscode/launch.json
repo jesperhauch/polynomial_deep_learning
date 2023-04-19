@@ -37,6 +37,19 @@
             ]
         },
         {
+            "name": "Temporal Training",
+            "type": "python",
+            "request": "launch",
+            "program": "epidemiology_training.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--multiplication_net=FeedForwardNN",
+                "--lag_size=2",
+                "--n_degree=4"
+            ]
+        },
+        {
             "name": "Models & Data",
             "type": "python",
             "request": "launch",
