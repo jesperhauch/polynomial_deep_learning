@@ -32,10 +32,10 @@ class BaseDataClass:
             self.standardize_features()
 
     def build_features(self, n_data: int) -> torch.Tensor:
-        pass
+        return torch.empty()
 
     def calculate_targets(self, **kwargs) -> torch.Tensor:
-        pass
+        return torch.empty()
     
     def standardize_features(self):
         feature_scaler = StandardScaler()
@@ -51,7 +51,7 @@ class BaseDataClass:
 
     def train_test_split(self, n_data):
         self.train_indices = torch.arange(*(self.train_quantiles*n_data)).to(torch.int64)
-        self.test_indices = torch.cat([torch.arange(0, self.train_indices[0]), torch.arange(self.train_indices[-1]+1, n_data)]).to(torch.int64)
+        self.test_indices = torch.cat([torch.arange(0, self.train_indices[0].item()), torch.arange(self.train_indices[-1].item()+1, n_data)]).to(torch.int64)
 
     def generate_train_data(self) -> Tuple:
         return self.train_features, self.train_targets

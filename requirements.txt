@@ -1,5 +1,7 @@
 torch
+torcheval
 pytorch-lightning
+lightning
 scikit-learn
 tensorboard
 ipykernel

@@ -1,17 +1,22 @@
-import torch.nn as nn
-import pytorch_lightning as pl
-from typing import List, Tuple
 import torch
-from sklearn.metrics import r2_score, mean_absolute_error, mean_absolute_percentage_error, mean_squared_error
+import torch.nn as nn
+from lightning import LightningModule
+from torchmetrics import MultioutputWrapper, R2Score, MeanAbsoluteError, MeanAbsolutePercentageError, MeanSquaredError 
+from typing import List, Tuple
+from models.utils import MaxMin, WeightedMSELoss
 
-class BaseModel(pl.LightningModule):
-    loss = nn.MSELoss()
+class BaseModel(LightningModule):
     def __init__(self):
         super().__init__()
+        self.loss = nn.MSELoss()
         self.save_hyperparameters()
+        self.r2 = R2Score()
+        self.mae = MeanAbsoluteError()
+        self.mape = MeanAbsolutePercentageError()
+        self.mse = MeanSquaredError()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        pass
+        return x
     
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
@@ -29,72 +34,104 @@ class BaseModel(pl.LightningModule):
         y_hat = self.forward(x)
         loss = self.loss(y_hat, y)
         self.log('val_loss', loss, on_epoch=True)
-        self.log('val_r2', r2_score(y, y_hat), on_epoch=True)
-        self.log('val_rmse', mean_squared_error(y, y_hat, squared=False), on_epoch=True)
+        self.log('val_r2', self.r2(y_hat, y), on_epoch=True)
         return loss
     
     def test_step(self, batch, batch_idx, dataloader_idx=0):
         x, y = batch
         y_hat = self.forward(x)
-        self.log('test_r2', r2_score(y, y_hat))
-        self.log('test_mae', mean_absolute_error(y, y_hat))
-        self.log("test_mape", mean_absolute_percentage_error(y, y_hat))
-        self.log("test_rmse", mean_squared_error(y, y_hat, squared=False))
+        self.log('test_r2', self.r2(y_hat, y))
+        self.log('test_mae', self.mae(y_hat, y))
+        self.log("test_mape", self.mape(y_hat, y))
+        self.log("test_mse", self.mse(y_hat, y))
 
-class TemporalModelWrapper(BaseModel):
-    def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, n_layers: int = 1, **kwargs):
+class SIRModelWrapper(BaseModel):
+    log_features = ["S", "I", "R"]
+    val_metrics = ["r2", "mape", "mse"]
+    test_metrics = ["r2", "mape", "mae", "mse"]
+    def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, scale: bool=False, loss_fn: nn.modules.loss._Loss = nn.MSELoss(), **kwargs):
         super().__init__()
-        self.n_layers = n_layers
+        self.r2 = R2Score(num_outputs = input_size, multioutput="raw_values")
+        self.mae = MultioutputWrapper(MeanAbsoluteError(), num_outputs=input_size)
+        self.mape = MultioutputWrapper(MeanAbsolutePercentageError(), num_outputs=input_size)
+        self.mse = MultioutputWrapper(MeanSquaredError(), num_outputs=input_size)
         self.hidden_size = hidden_size
-        setattr(self, "s_net", multiplication_net(input_size, hidden_size, n_degree, 1))
-        setattr(self, "i_net", multiplication_net(input_size, hidden_size, n_degree, 1))
+        self.scale = scale
+        self.scaler = MaxMin()
+        self.loss = loss_fn
+        self.s_net = multiplication_net(input_size, hidden_size, n_degree, 1)
+        self.i_net = multiplication_net(input_size, hidden_size, n_degree, 1)
+        self.r_net = multiplication_net(input_size, hidden_size, n_degree, 1) # n_degree//2 for better performance
+        
+        self.softmax = nn.Softmax(dim=-1)
         self.save_hyperparameters()
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         s = self.s_net(x)
         i = self.i_net(x)
-        return torch.sigmoid(torch.stack((s,i), dim=-1))
-        #return torch.stack((s,i), dim=-1)
-    
+        r = self.r_net(x)
+        output =  torch.stack((s,i,r), dim=-1)
+        return self.softmax(output)
+
     def training_step(self, batch, batch_idx):
         X, y = batch
-        y_hat = self(X)
+        if self.scale:
+            X = self.scaler.transform(X)
+            y = self.scaler.transform(y)
+        y_hat = self(X).reshape(y.shape)
         loss = self.loss(y_hat, y)
         self.log("train_loss", loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         X, y = batch
+        if self.scale:
+            X = self.scaler.transform(X)
+            y = self.scaler.transform(y)
         y_hat = torch.zeros_like(y)
-        X_forward = X[:, 0, :] # Only use first observation
+        X_forward = X[:, 0, :].unsqueeze(1) # Only use first observation
         for t in range(X.size(1)):
             X_forward = self(X_forward)
             y_hat[:, t, :] = X_forward
+            X_forward = X_forward.unsqueeze(1)
         loss = self.loss(y_hat, y)
         self.log('val_loss', loss, on_epoch=True)
 
         # Extra logging metrics - need to flatten batch dimension
         y = y.flatten(0,1)
         y_hat = y_hat.flatten(0,1)
-        self.log('val_r2', r2_score(y, y_hat), on_epoch=True)
-        self.log('val_rmse', mean_squared_error(y, y_hat, squared=False), on_epoch=True)
+        r2 = self.r2(y_hat, y)
+        mape = self.mape(y_hat, y)
+        mse = self.mse(y_hat, y)
+        values = [r2, mape, mse]
+        self.log_dict({f"val_{metric}_{feat}": values[i][j] for i, metric in enumerate(self.val_metrics) for j, feat in enumerate(self.log_features)})
         return loss
     
     def test_step(self, batch, batch_idx):
         X, y = batch
+        if self.scale:
+            X = self.scaler.transform(X)
+            y = self.scaler.transform(y)
         y_hat = torch.zeros_like(y)
-        X_forward = X[:, 0, :] # Only use first observation
+        X_forward = X[:, 0, :].unsqueeze(1) # Only use first observation
         for t in range(X.size(1)):
             X_forward = self(X_forward)
             y_hat[:, t, :] = X_forward
+            X_forward = X_forward.unsqueeze(1)
+
+        if self.scale:
+            y = self.scaler.untransform(y)
+            y_hat = self.scaler.untransform(y_hat)
 
         # Extra logging metrics - need to flatten batch dimension
         y = y.flatten(0,1)
         y_hat = y_hat.flatten(0,1)
-        self.log('test_r2', r2_score(y, y_hat))
-        self.log('test_mae', mean_absolute_error(y, y_hat))
-        self.log("test_mape", mean_absolute_percentage_error(y, y_hat))
-        self.log("test_rmse", mean_squared_error(y, y_hat, squared=False))
+        r2 = self.r2(y_hat, y)
+        mape = self.mape(y_hat, y)
+        mae = self.mae(y_hat, y)
+        mse = self.mse(y_hat, y)
+        values = [r2, mape, mae, mse]
+        self.log_dict({f"test_{metric}_{feat}": values[i][j] for i, metric in enumerate(self.test_metrics) for j, feat in enumerate(self.log_features)})
 
     def predict_step(self, batch, batch_idx, dataloader_idx = 0):
         X, y = batch
@@ -104,71 +141,3 @@ class TemporalModelWrapper(BaseModel):
             X_forward = self(X_forward)
             y_hat[:, t, :] = X_forward
         return y_hat
-    
-class EpidemiologyModelWrapper(pl.LightningModule): # Incorrect model
-    loss = nn.MSELoss()
-    def __init__(self, temporal_layer: nn.Module, multiplication_net: nn.Module, input_size: int, hidden_size: int, n_degree: int, n_layers: int = 1, **kwargs):
-        super().__init__()
-        self.n_layers = n_layers
-        self.hidden_size = hidden_size
-        setattr(self, "s_net", multiplication_net(hidden_size, hidden_size, n_degree, 1))
-        setattr(self, "i_net", multiplication_net(hidden_size, hidden_size, n_degree, 1))
-        setattr(self, "temporal_layer", temporal_layer(input_size, hidden_size, n_layers, batch_first=True))
-        self.save_hyperparameters()
-    
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
-    
-    def init_hidden(self, batch_size: int):
-        n_hidden = 1 if type(self.temporal_layer).__name__ in ["RNN", "GRU"] else 2 # only works for RNN, GRU and LSTM
-        return (torch.zeros(self.n_layers, batch_size, self.hidden_size) for _ in range(n_hidden))
-        #return (nn.init.kaiming_uniform_(torch.empty(self.n_layers, batch_size, self.hidden_size)) for _ in range(n_hidden)) # He initialization
-    
-    def forward(self, x: torch.Tensor, *args) -> Tuple[torch.Tensor]:
-        x, args = self.temporal_layer(x, *args)
-        s = self.s_net(x)
-        i = self.i_net(x)
-        return torch.sigmoid(torch.stack((s,i), dim=-1)), args
-    
-    def training_step(self, batch, batch_idx):
-        X, y = batch
-        hidden = self.init_hidden(X.size(0))
-        y_hat, (hidden) = self(X, *hidden)
-        loss = self.loss(y_hat, y)
-        self.log("train_loss", loss, on_epoch=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        X, y = batch
-        hidden = self.init_hidden(X.size(0))
-        y_hat = torch.zeros_like(y)
-        X_forward = X[:, 0, :]
-        for t in range(X.size(1)):
-            X_forward, hidden = self(X_forward, *hidden)
-            y_hat[:, t, :] = X_forward
-        loss = self.loss(y_hat, y)
-        self.log('val_loss', loss, on_epoch=True)
-
-        # Extra logging metrics - need to flatten batch dimension
-        y = y.flatten(0,1)
-        y_hat = y_hat.flatten(0,1)
-        self.log('val_r2', r2_score(y, y_hat), on_epoch=True)
-        self.log('val_rmse', mean_squared_error(y, y_hat, squared=False), on_epoch=True)
-        return loss
-    
-    def test_step(self, batch, batch_idx):
-        X, y = batch
-        hidden = self.init_hidden(X.size(0))
-        y_hat = torch.zeros_like(y)
-        X_forward = X[:, 0, :]
-        for t in range(X.size(1)):
-            X_forward, hidden = self(X_forward, *hidden)
-            y_hat[:, t, :] = X_forward
-        # Extra logging metrics - need to flatten batch dimension
-        y = y.flatten(0,1)
-        y_hat = y_hat.flatten(0,1)
-        self.log('test_r2', r2_score(y, y_hat))
-        self.log('test_mae', mean_absolute_error(y, y_hat))
-        self.log("test_mape", mean_absolute_percentage_error(y, y_hat))
-        self.log("test_rmse", mean_squared_error(y, y_hat, squared=False))

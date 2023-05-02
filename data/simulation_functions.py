@@ -11,15 +11,17 @@ class SteelColumn(BaseDataClass):
     # Eldred et al. (2008) use values
     B, D, H = 300, 20, 300
     def build_features(self, n_data: int) -> torch.Tensor:
-        F_s = dist.log_normal.LogNormal(np.log(400), np.log(35)).sample((n_data,)) # yield stress (MPa)
-        P_1 = dist.normal.Normal(500000, 50000).sample((n_data,)) # dead weight load (N)
-        P_2 = dist.gumbel.Gumbel(600000, 90000).sample((n_data,)) # variable load (N)
-        P_3 = dist.gumbel.Gumbel(600000, 90000).sample((n_data,)) # variable load (N)
-        F_0 = dist.normal.Normal(30, 10).sample((n_data,)) # initial deflection (mm)
-        E = dist.weibull.Weibull(210000., 4200.).sample((n_data,)) # Young's modulus (MPa)
+        sample_shape = torch.empty(n_data,)
+        F_s = dist.log_normal.LogNormal(np.log(400), np.log(35)).sample(sample_shape.size()) # yield stress (MPa)
+        P_1 = dist.normal.Normal(500000, 50000).sample(sample_shape.size()) # dead weight load (N)
+        P_2 = dist.gumbel.Gumbel(600000, 90000).sample(sample_shape.size()) # variable load (N)
+        P_3 = dist.gumbel.Gumbel(600000, 90000).sample(sample_shape.size()) # variable load (N)
+        F_0 = dist.normal.Normal(30, 10).sample(sample_shape.size()) # initial deflection (mm)
+        E = dist.weibull.Weibull(210000., 4200.).sample(sample_shape.size()) # Young's modulus (MPa)
         P = P_1 + P_2 + P_3
-        E_b = (torch.pi**2*E*self.B*self.D*self.H**2)/(2*self.L**2)
-        return torch.stack([F_s, F_0, E_b, P], dim=1)
+        pi = torch.Tensor(torch.pi)
+        E_b = (torch.pow(pi, 2)*E*self.B*self.D*self.H**2)/(2*self.L**2)
+        return torch.stack((F_s, F_0, E_b, P), dim=1)
 
     def calculate_targets(self, F_s, F_0, E_b, P):
         term_1 = 1 / (2*self.B*self.D)
@@ -33,16 +35,17 @@ class SulfurModel(BaseDataClass):
     S_0 = 1366 # W/m2
     A = 5.1*10**14 # m2
     def build_features(self, n_data: int) -> torch.Tensor:
-        T_r = dist.log_normal.LogNormal(np.log(0.76), np.log(1.2)).sample((n_data,)) # transmittance of the atmospheric layer above the aerosol layer
-        A_c = dist.log_normal.LogNormal(np.log(0.39), np.log(1.1)).sample((n_data,)) # fractional cloud cover
-        R_s = dist.log_normal.LogNormal(np.log(0.85), np.log(1.1)).sample((n_data,)) # mean albedo of the underlying surface
-        beta = dist.log_normal.LogNormal(np.log(0.3), np.log(1.3)).sample((n_data,)) # backscattered fraction
-        Psi_e = dist.log_normal.LogNormal(np.log(5.0), np.log(1.4)).sample((n_data,)) # mass scattering efficiency (m^2g^(-1))
-        f_Psi_e = dist.log_normal.LogNormal(np.log(1.7), (1.2)).sample((n_data,)) # scaling factor for Psi_e
-        Q = dist.log_normal.LogNormal(np.log(71.0), np.log(1.15)).sample((n_data,)) # global input flux of anthropogenic sulfur (10^12 g*y*r^(-1))
-        Y = dist.log_normal.LogNormal(np.log(0.5), np.log(1.5)).sample((n_data,)) # fraction of sulfur dioxide oxidized to sulfate aerosol
-        L = dist.log_normal.LogNormal(np.log(5.5), np.log(1.5)).sample((n_data,))
-        return torch.stack([T_r, A_c, R_s, beta, Psi_e, f_Psi_e, Q, Y, L], dim=1)
+        sample_shape = torch.empty(n_data,)
+        T_r = dist.log_normal.LogNormal(np.log(0.76), np.log(1.2)).sample(sample_shape.size()) # transmittance of the atmospheric layer above the aerosol layer
+        A_c = dist.log_normal.LogNormal(np.log(0.39), np.log(1.1)).sample(sample_shape.size()) # fractional cloud cover
+        R_s = dist.log_normal.LogNormal(np.log(0.85), np.log(1.1)).sample(sample_shape.size()) # mean albedo of the underlying surface
+        beta = dist.log_normal.LogNormal(np.log(0.3), np.log(1.3)).sample(sample_shape.size()) # backscattered fraction
+        Psi_e = dist.log_normal.LogNormal(np.log(5.0), np.log(1.4)).sample(sample_shape.size()) # mass scattering efficiency (m^2g^(-1))
+        f_Psi_e = dist.log_normal.LogNormal(np.log(1.7), (1.2)).sample(sample_shape.size()) # scaling factor for Psi_e
+        Q = dist.log_normal.LogNormal(np.log(71.0), np.log(1.15)).sample(sample_shape.size()) # global input flux of anthropogenic sulfur (10^12 g*y*r^(-1))
+        Y = dist.log_normal.LogNormal(np.log(0.5), np.log(1.5)).sample(sample_shape.size()) # fraction of sulfur dioxide oxidized to sulfate aerosol
+        L = dist.log_normal.LogNormal(np.log(5.5), np.log(1.5)).sample(sample_shape.size())
+        return torch.stack((T_r, A_c, R_s, beta, Psi_e, f_Psi_e, Q, Y, L), dim=1)
 
     def calculate_targets(self, T_r, A_c, R_s, beta, Psi_e, f_Psi_e, Q, Y, L) -> torch.Tensor:
         term1 = 3*Q*Y*L/self.A
@@ -56,8 +59,9 @@ class ShortColumn(BaseDataClass):
     b, h = 5, 15
     Y = dist.log_normal.LogNormal(5, 0.5).sample() # yield stress
     def build_features(self, n_data: int) -> torch.Tensor:
-        M = dist.normal.Normal(2000, 400).sample((n_data,)) # bending moment
-        P = dist.normal.Normal(500, 100).sample((n_data,)) # axial force
+        sample_shape = torch.empty(n_data,)
+        M = dist.normal.Normal(2000, 400).sample(sample_shape.size()) # bending moment
+        P = dist.normal.Normal(500, 100).sample(sample_shape.size()) # axial force
         return torch.stack([M, P], dim=1)
 
     def calculate_targets(self, M, P) -> torch.Tensor:
@@ -72,8 +76,9 @@ class Bukin06(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        x_1 = dist.uniform.Uniform(-15,-5).sample((n_data,))
-        x_2 = dist.uniform.Uniform(-3,3).sample((n_data,))
+        sample_shape = torch.empty(n_data,)
+        x_1 = dist.uniform.Uniform(-15,-5).sample(sample_shape.size())
+        x_2 = dist.uniform.Uniform(-3,3).sample(sample_shape.size())
         return torch.stack([x_1, x_2], dim=1)
 
     def calculate_targets(self, x1, x2):
@@ -86,7 +91,8 @@ class Currin(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        return dist.uniform.Uniform(0, 1).sample((n_data, 2))
+        sample_shape = torch.empty(n_data,)
+        return dist.uniform.Uniform(0, 1).sample(sample_shape.size())
     
     def calculate_targets(self, x_1, x_2) -> torch.Tensor:
         return 4.9 + 21.15*x_1 - 2.17*x_2 - 15.88*x_1**2 - 1.38*x_2**2 - 5.26*x_1*x_2
@@ -107,7 +113,8 @@ class Colville(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        return dist.uniform.Uniform(-10, 10).sample((n_data, 4))
+        sample_shape = torch.empty(n_data,4)
+        return dist.uniform.Uniform(-10, 10).sample(sample_shape.size())
 
     def calculate_targets(self, x1, x2, x3, x4) -> torch.Tensor:
         expr = 100*(x1**2-x2)**2 + (x1-1)**2 + (x3-1)**2 + 90*(x3**2-x4)**2 + 10.1*((x2-1)**2 + (x4-1)**2)+19.8*(x2-1)*(x4-1)
@@ -120,7 +127,8 @@ class DettePepelyshev(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        return dist.uniform.Uniform(0, 1).sample((n_data, 3))
+        sample_shape = torch.empty(n_data,3)
+        return dist.uniform.Uniform(0, 1).sample(sample_shape.size())
     
     def calculate_targets(self, x1, x2, x3) -> torch.Tensor:
         expr = 4*(x1-2+8*x2-8*x2**2)**2 + (3-4*x2)**2 + 16*torch.sqrt(x3+1)*(2*x3-1)**2
@@ -133,7 +141,8 @@ class Beale(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        return dist.uniform.Uniform(-4.5, 4.5).sample((n_data, 2))
+        sample_shape = torch.empty(n_data,2)
+        return dist.uniform.Uniform(-4.5, 4.5).sample(sample_shape.size())
 
     def calculate_targets(self, x1, x2):
         expr = (x1*x2-x1+1.5)**2 + (x1*x2**2-x1 + 2.25)**2 + (x1*x2**3-x1+2.625)**2
@@ -146,7 +155,8 @@ class Price03(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        return dist.uniform.Uniform(-500, 500).sample((n_data, 2))
+        sample_shape = torch.empty(n_data,2)
+        return dist.uniform.Uniform(-500, 500).sample(sample_shape.size())
     
     def calculate_targets(self, x1, x2):
         return 100*(x2-x1**2)**2+6*(6.4*(x2-0.5)**2-x1-0.6)**2
@@ -158,7 +168,8 @@ class CamelThreeHump(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        return dist.uniform.Uniform(-5, 5).sample((n_data, 2))
+        sample_shape = torch.empty(n_data,2)
+        return dist.uniform.Uniform(-5, 5).sample(sample_shape.size())
     
     def calculate_targets(self, x1, x2) -> torch.Tensor:
         return 2*x1**2 - 1.05*x1**4 + (x1**6)/6 + x1*x2 + x2**2
@@ -170,7 +181,8 @@ class GoldsteinPrice(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        return dist.uniform.Uniform(-2, 2).sample((n_data, 2))
+        sample_shape = torch.empty(n_data,2)
+        return dist.uniform.Uniform(-2, 2).sample(sample_shape.size())
     
     def calculate_targets(self, x1, x2) -> torch.Tensor:
         expr = (1 + (x1 + x2 + 1)**2 * (19 - 14*x1 + 3*x1**2 - 14*x2 + 6*x1*x2 + 3*x2**2))\

@@ -1,4 +1,5 @@
 import torch
+from typing import List
 
 class StandardScaler:
     """From https://gist.github.com/farahmand-m/8a416f33a27d73a149f92ce4708beb40
