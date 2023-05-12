@@ -1,7 +1,7 @@
 import shlex, subprocess
 
 commands = []
-models = ["pdc", "pdclow", "ccp"]
+models = ["PDC", "PDCLow", "CCP"]
 change_std = [False, True]
 
 polynomial = "lambda a, b, c, d, e: (a**3)*(b**3)*(c**3) - d**4*e**4"

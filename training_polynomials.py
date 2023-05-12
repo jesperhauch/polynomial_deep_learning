@@ -6,7 +6,8 @@ from utils.logging_helper import run_information
 from data.polynomials import *
 from data.simulation_functions import *
 from data.epidemiology import *
-import pytorch_lightning as pl
+from lightning import Trainer
+from lightning.pytorch.loggers import TensorBoardLogger
 from argparse import ArgumentParser
 import warnings
 warnings.filterwarnings("ignore", ".*does not have many workers.*")
@@ -44,7 +45,7 @@ if args.data_generator == "Normal":
     polynomial = eval(args.polynomial, globals())
     in_dim = polynomial.__code__.co_argcount
     data_gen = NormalGenerator(polynomial, in_dim, args.n_data, args.data_mean, args.data_std, args.noise)
-    data_args = {"data_dist": str(data_gen.data_dist),
+    data_args = {"data_dist": f"Normal({str(args.data_mean)},{str(args.data_std)})",
                  "noise": str(args.noise),
                  "polynomial_name": args.polynomial_name}
     log_name = args.polynomial_name
@@ -73,14 +74,12 @@ except:
 
 # Initialize logger and Trainer
 log_name += type(model).__name__
-logger = pl.loggers.TensorBoardLogger("tb_logs", name=log_name)
-trainer = pl.Trainer(limit_train_batches=64,max_epochs=args.epochs, log_every_n_steps=25, logger=logger)
+logger = TensorBoardLogger("tb_logs", name=log_name)
+trainer = Trainer(limit_train_batches=64,max_epochs=args.epochs, log_every_n_steps=25, logger=logger)
 
 # Log data hyperparams and output run information
 run_information(logger, data_gen, model, **data_args)
 
 # Start training
 trainer.fit(model=model, datamodule=dataloader)
-trainer.logger.finalize("success")
-trainer.logger.save()
 trainer.test(model=model, datamodule=dataloader)

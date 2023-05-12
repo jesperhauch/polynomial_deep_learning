@@ -25,28 +25,33 @@
             ]
         },
         {
-            "name": "Baseline Training",
+            "name": "Baseline Epidemiology Training",
             "type": "python",
             "request": "launch",
-            "program": "baseline_training.py",
+            "program": "baseline_epidemiology_training.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--model=LinearRegression",
-                "--data_gen=Currin"
+                "--model=GradientBoostingRegressor",
+                "--seq_len=3",
+                "--n_data=1000"
             ]
         },
         {
-            "name": "Temporal Training",
+            "name": "Epidemiology Training",
             "type": "python",
             "request": "launch",
             "program": "epidemiology_training.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--multiplication_net=FeedForwardNN",
-                "--lag_size=2",
-                "--n_degree=4"
+                "--multiplication_net=PDCLow",
+                "--lag_size=1",
+                "--n_degree=2",
+                "--seq_len=2",
+                "--epochs=5",
+                "--loss_fn=WeightedMSELoss",
+                "--n_data=1000"
             ]
         },
         {
@@ -55,7 +60,6 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
             "env": { "PYTHONPATH": "${workspaceRoot}"}
         }
     ]

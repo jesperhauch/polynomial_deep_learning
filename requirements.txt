@@ -1,6 +1,5 @@
 torch
-torcheval
-pytorch-lightning
+torchmetrics
 lightning
 scikit-learn
 tensorboard

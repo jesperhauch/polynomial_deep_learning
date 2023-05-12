@@ -4,7 +4,7 @@ from typing import List
 class StandardScaler:
     """From https://gist.github.com/farahmand-m/8a416f33a27d73a149f92ce4708beb40
     """
-    def __init__(self, mean=None, std=None, epsilon=1e-7):
+    def __init__(self, epsilon=1e-7):
         """Standard Scaler.
         The class can be used to normalize PyTorch Tensors using native functions. The module does not expect the
         tensors to be of any specific shape; as long as the features are the last dimension in the tensor, the module
@@ -13,8 +13,6 @@ class StandardScaler:
         :param std: The standard deviation of the features. The property will be set after a call to fit.
         :param epsilon: Used to avoid a Division-By-Zero exception.
         """
-        self.mean = mean
-        self.std = std
         self.epsilon = epsilon
 
     def fit(self, values):

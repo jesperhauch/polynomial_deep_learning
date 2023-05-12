@@ -5,7 +5,7 @@ from sklearn.pipeline import Pipeline
 from utils.logging_helper import baseline_run_information, baseline_metrics
 from data.polynomials import *
 from data.simulation_functions import *
-import pytorch_lightning as pl
+from lightning.pytorch.loggers import TensorBoardLogger
 from argparse import ArgumentParser
 import warnings
 warnings.filterwarnings("ignore", ".*does not have many workers.*")
@@ -66,7 +66,7 @@ if args.polynomial_features:
     log_name += "_polynomial"
 
 # Initialize logger
-logger = pl.loggers.TensorBoardLogger("tb_logs", name=log_name)
+logger = TensorBoardLogger("tb_logs", name=log_name)
 run_kwargs = {"polynomial_features": args.polynomial_features,
               "n_degree": args.n_degree}
 baseline_run_information(data_gen, model, **run_kwargs)

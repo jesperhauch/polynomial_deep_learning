@@ -3,13 +3,13 @@ import shlex, subprocess
 commands = []
 multiplication_net = ["PDCLow", "PDC", "CCP"]
 epochs = 100
-n_degree = 2
+n_degree = 3
 lag_size = 1
-seq_len = 2
-loss_fn = ['MSELoss', 'WeightedMSELoss']
+seq_len = 4 
+loss_fn = ['MSELoss']
 
 for net in multiplication_net:
-    command = 'python epidemiology_training.py --multiplication_net {sim}'.format(sim=net)
+    command = 'python training_epidemiology.py --multiplication_net {sim}'.format(sim=net)
     command += ' --n_degree {deg}'.format(deg=n_degree)
     command += ' --epochs {epoch}'.format(epoch=epochs)
     command += ' --lag_size {lag}'.format(lag=lag_size)
@@ -21,4 +21,5 @@ for net in multiplication_net:
 if __name__ == "__main__":
     for command in commands:
         args = shlex.split(command)
-        subprocess.run(args)
+        subprocess.Popen(args)
+    
