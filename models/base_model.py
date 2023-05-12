@@ -4,6 +4,8 @@ from lightning import LightningModule
 from torchmetrics import MultioutputWrapper, R2Score, MeanAbsoluteError, MeanAbsolutePercentageError, MeanSquaredError 
 from typing import List, Tuple
 from models.utils import MaxMin, WeightedMSELoss
+from torch.nn import MSELoss
+from models.utils import WeightedMSELoss
 
 class BaseModel(LightningModule):
     def __init__(self):
@@ -49,19 +51,23 @@ class SIRModelWrapper(BaseModel):
     log_features = ["S", "I", "R"]
     val_metrics = ["r2", "mape", "mse"]
     test_metrics = ["r2", "mape", "mae", "mse"]
-    def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, scale: bool=False, loss_fn: nn.modules.loss._Loss = nn.MSELoss(), **kwargs):
+    def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, scale: bool=False, loss_fn: str = "MSELoss", **kwargs):
         super().__init__()
-        self.r2 = R2Score(num_outputs = input_size, multioutput="raw_values")
-        self.mae = MultioutputWrapper(MeanAbsoluteError(), num_outputs=input_size)
-        self.mape = MultioutputWrapper(MeanAbsolutePercentageError(), num_outputs=input_size)
-        self.mse = MultioutputWrapper(MeanSquaredError(), num_outputs=input_size)
-        self.hidden_size = hidden_size
+        self.r2 = MultioutputWrapper(R2Score(), num_outputs=3)
+        self.mae = MultioutputWrapper(MeanAbsoluteError(), num_outputs=3)
+        self.mape = MultioutputWrapper(MeanAbsolutePercentageError(), num_outputs=3)
+        self.mse = MultioutputWrapper(MeanSquaredError(), num_outputs=3)
         self.scale = scale
         self.scaler = MaxMin()
-        self.loss = loss_fn
+        try:
+            self.loss = eval(loss_fn, globals())()
+        except Exception as inst:
+            print(inst)
+            raise NotImplementedError("The loss function {n} is not implemented or imported correctly.")
+          
         self.s_net = multiplication_net(input_size, hidden_size, n_degree, 1)
         self.i_net = multiplication_net(input_size, hidden_size, n_degree, 1)
-        self.r_net = multiplication_net(input_size, hidden_size, n_degree, 1) # n_degree//2 for better performance
+        self.r_net = multiplication_net(input_size, hidden_size, n_degree, 1)
         
         self.softmax = nn.Softmax(dim=-1)
         self.save_hyperparameters()
@@ -74,26 +80,31 @@ class SIRModelWrapper(BaseModel):
         return self.softmax(output)
 
     def training_step(self, batch, batch_idx):
-        X, y = batch
+        beta, gamma, X, y = batch
+        beta = beta.unsqueeze(-1).repeat(1,X.size(1)).unsqueeze(-1).to(torch.float32)
+        gamma = gamma.unsqueeze(-1).repeat(1,X.size(1)).unsqueeze(-1).to(torch.float32)
         if self.scale:
             X = self.scaler.transform(X)
             y = self.scaler.transform(y)
-        y_hat = self(X).reshape(y.shape)
+        X_input = torch.concat([X, beta, gamma], dim=-1)
+        y_hat = self(X_input).reshape(y.shape)
         loss = self.loss(y_hat, y)
         self.log("train_loss", loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        X, y = batch
+        beta, gamma, X, y = batch
+        beta = beta.reshape(len(X), 1).to(torch.float32)
+        gamma = gamma.reshape(len(X), 1).to(torch.float32)
         if self.scale:
             X = self.scaler.transform(X)
             y = self.scaler.transform(y)
         y_hat = torch.zeros_like(y)
-        X_forward = X[:, 0, :].unsqueeze(1) # Only use first observation
+        X_forward = torch.concat([X[:,0,:], beta, gamma], dim=1).unsqueeze(1) # Only use first observation
         for t in range(X.size(1)):
-            X_forward = self(X_forward)
-            y_hat[:, t, :] = X_forward
-            X_forward = X_forward.unsqueeze(1)
+            next_state = self(X_forward)
+            y_hat[:, t, :] = next_state
+            X_forward = torch.concat([next_state, beta, gamma], dim=1).unsqueeze(1)
         loss = self.loss(y_hat, y)
         self.log('val_loss', loss, on_epoch=True)
 
@@ -108,16 +119,18 @@ class SIRModelWrapper(BaseModel):
         return loss
     
     def test_step(self, batch, batch_idx):
-        X, y = batch
+        beta, gamma, X, y = batch
+        beta = beta.reshape(len(X), 1).to(torch.float32)
+        gamma = gamma.reshape(len(X), 1).to(torch.float32)
         if self.scale:
             X = self.scaler.transform(X)
             y = self.scaler.transform(y)
         y_hat = torch.zeros_like(y)
-        X_forward = X[:, 0, :].unsqueeze(1) # Only use first observation
+        X_forward = torch.concat([X[:,0,:], beta, gamma], dim=1).unsqueeze(1) # Only use first observation
         for t in range(X.size(1)):
-            X_forward = self(X_forward)
-            y_hat[:, t, :] = X_forward
-            X_forward = X_forward.unsqueeze(1)
+            next_state = self(X_forward)
+            y_hat[:, t, :] = next_state
+            X_forward = torch.concat([next_state, beta, gamma], dim=1).unsqueeze(1)
 
         if self.scale:
             y = self.scaler.untransform(y)
@@ -132,12 +145,24 @@ class SIRModelWrapper(BaseModel):
         mse = self.mse(y_hat, y)
         values = [r2, mape, mae, mse]
         self.log_dict({f"test_{metric}_{feat}": values[i][j] for i, metric in enumerate(self.test_metrics) for j, feat in enumerate(self.log_features)})
-
-    def predict_step(self, batch, batch_idx, dataloader_idx = 0):
-        X, y = batch
-        y_hat = torch.zeros_like(y)
-        X_forward = X[:, 0, :] # Only use first observation
-        for t in range(X.size(1)):
-            X_forward = self(X_forward)
-            y_hat[:, t, :] = X_forward
-        return y_hat
+    
+    @torch.no_grad()
+    def generate_sequence(self, N: int, X_start: torch.Tensor, beta: float, gamma: float):
+        beta = torch.Tensor([beta])
+        gamma = torch.Tensor([gamma])
+        X_forward = torch.concat([X_start, beta, gamma], dim=-1)
+        simulation = []
+        for _ in range(N):
+            next_state = self(X_forward)
+            simulation.append(next_state)
+            X_forward = torch.concat([next_state, beta, gamma], dim=-1)
+        
+        return torch.stack(simulation)
+    
+if __name__ == "__main__":
+    from models.pi_nets import CCP
+    from torch.nn.functional import softmax
+    model = SIRModelWrapper(CCP, 5, 64, 2)
+    data = torch.randn(3)
+    data = softmax(data, dim=0)
+    model.generate_step(5, data, 0.05, 0.017)
