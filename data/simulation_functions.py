@@ -70,7 +70,7 @@ class ShortColumn(BaseDataClass):
         return 1-term1-term2
 
 class Bukin06(BaseDataClass):
-    """https://infinity77.net/global_optimization/test_functions_nd_B.html#go_benchmark.Bukin06
+    """http://infinity77.net/go_2021/scipy_test_functions_nd_B.html#go_benchmark.Bukin06
 
     Args:
         BaseDataClass (_type_): _description_
@@ -91,7 +91,7 @@ class Currin(BaseDataClass):
         BaseDataClass (_type_): _description_
     """
     def build_features(self, n_data: int) -> torch.Tensor:
-        sample_shape = torch.empty(n_data,)
+        sample_shape = torch.empty(n_data,2)
         return dist.uniform.Uniform(0, 1).sample(sample_shape.size())
     
     def calculate_targets(self, x_1, x_2) -> torch.Tensor:
@@ -190,7 +190,7 @@ class GoldsteinPrice(BaseDataClass):
         return expr
 
 if __name__ == "__main__":
-    data = GoldsteinPrice(100000)
+    data = Currin(10000)
     features, targets = data.generate_train_data()
     print(targets.quantile(torch.Tensor([0, 0.25, 0.5, 0.75, 1])))
 
