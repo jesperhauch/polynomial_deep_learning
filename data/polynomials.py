@@ -1,4 +1,4 @@
-import pytorch_lightning as pl
+from lightning import LightningDataModule
 from torch.utils.data import random_split, DataLoader, TensorDataset
 from data.base_data import BaseDataClass
 import torch.distributions as dist
@@ -13,7 +13,6 @@ class NormalGenerator(BaseDataClass):
         self.feature_dim = feature_dim
         self.n_data = n_data
         self.noise = noise
-
         self.train_features = dist.normal.Normal(mu, std).sample((n_data, feature_dim))
         self.train_targets = self.polynomial(*self.train_features.clone().permute(1,0))
         
@@ -26,7 +25,7 @@ class NormalGenerator(BaseDataClass):
         for mu in self.means:
             for std in self.stds:
                 test_dist = dist.normal.Normal(mu, std)
-                feature_samples = test_dist.sample((self.n_data, self.n_features))
+                feature_samples = test_dist.sample((self.n_data, self.feature_dim))
                 target_samples = self.polynomial(*feature_samples.clone().permute(1,0))
                 if self.noise:
                     feature_samples = feature_samples + self.noise_dist.sample((self.n_data,self.feature_dim))
@@ -35,7 +34,7 @@ class NormalGenerator(BaseDataClass):
         return test_sets
 
 
-class PolynomialModule(pl.LightningDataModule):
+class PolynomialModule(LightningDataModule):
     def __init__(self, fn_data: BaseDataClass, batch_size: int = 32):
         self.fn_data = fn_data
         self.batch_size = batch_size
