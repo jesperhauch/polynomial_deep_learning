@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
 from lightning import LightningModule
-from torchmetrics import MultioutputWrapper, R2Score, MeanAbsoluteError, MeanAbsolutePercentageError, MeanSquaredError 
+from torchmetrics import MultioutputWrapper, R2Score, MeanAbsoluteError, MeanSquaredError 
 from typing import List, Tuple
-from models.utils import MaxMin, WeightedMSELoss
+from models.utils import WeightedMSELoss, RootRelativeSquaredError
 from torch.nn import MSELoss
-from models.utils import WeightedMSELoss
 
 class BaseModel(LightningModule):
     def __init__(self):
@@ -14,7 +13,7 @@ class BaseModel(LightningModule):
         self.save_hyperparameters()
         self.r2 = R2Score()
         self.mae = MeanAbsoluteError()
-        self.mape = MeanAbsolutePercentageError()
+        self.rrse = RootRelativeSquaredError()
         self.mse = MeanSquaredError()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -37,6 +36,7 @@ class BaseModel(LightningModule):
         loss = self.loss(y_hat, y)
         self.log('val_loss', loss, on_epoch=True)
         self.log('val_r2', self.r2(y_hat, y), on_epoch=True)
+        self.log('val_rrse', self.rrse(y_hat, y), on_epoch=True)
         return loss
     
     def test_step(self, batch, batch_idx, dataloader_idx=0):
@@ -44,21 +44,19 @@ class BaseModel(LightningModule):
         y_hat = self.forward(x)
         self.log('test_r2', self.r2(y_hat, y))
         self.log('test_mae', self.mae(y_hat, y))
-        self.log("test_mape", self.mape(y_hat, y))
+        self.log("test_rrse", self.rrse(y_hat, y))
         self.log("test_mse", self.mse(y_hat, y))
 
 class SIRModelWrapper(BaseModel):
     log_features = ["S", "I", "R"]
-    val_metrics = ["r2", "mape", "mse"]
-    test_metrics = ["r2", "mape", "mae", "mse"]
-    def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, scale: bool=False, loss_fn: str = "MSELoss", **kwargs):
+    val_metrics = ["r2", "rrse", "mse"]
+    test_metrics = ["r2", "rrse", "mae", "mse"]
+    def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, loss_fn: str = "MSELoss", **kwargs):
         super().__init__()
         self.r2 = MultioutputWrapper(R2Score(), num_outputs=3)
         self.mae = MultioutputWrapper(MeanAbsoluteError(), num_outputs=3)
-        self.mape = MultioutputWrapper(MeanAbsolutePercentageError(), num_outputs=3)
+        self.rrse = MultioutputWrapper(RootRelativeSquaredError(), num_outputs=3)
         self.mse = MultioutputWrapper(MeanSquaredError(), num_outputs=3)
-        self.scale = scale
-        self.scaler = MaxMin()
         try:
             self.loss = eval(loss_fn, globals())()
         except Exception as inst:
@@ -83,9 +81,6 @@ class SIRModelWrapper(BaseModel):
         beta, gamma, X, y = batch
         beta = beta.unsqueeze(-1).repeat(1,X.size(1)).unsqueeze(-1).to(torch.float32)
         gamma = gamma.unsqueeze(-1).repeat(1,X.size(1)).unsqueeze(-1).to(torch.float32)
-        if self.scale:
-            X = self.scaler.transform(X)
-            y = self.scaler.transform(y)
         X_input = torch.concat([X, beta, gamma], dim=-1)
         y_hat = self(X_input).reshape(y.shape)
         loss = self.loss(y_hat, y)
@@ -96,9 +91,6 @@ class SIRModelWrapper(BaseModel):
         beta, gamma, X, y = batch
         beta = beta.reshape(len(X), 1).to(torch.float32)
         gamma = gamma.reshape(len(X), 1).to(torch.float32)
-        if self.scale:
-            X = self.scaler.transform(X)
-            y = self.scaler.transform(y)
         y_hat = torch.zeros_like(y)
         X_forward = torch.concat([X[:,0,:], beta, gamma], dim=1).unsqueeze(1) # Only use first observation
         for t in range(X.size(1)):
@@ -112,9 +104,9 @@ class SIRModelWrapper(BaseModel):
         y = y.flatten(0,1)
         y_hat = y_hat.flatten(0,1)
         r2 = self.r2(y_hat, y)
-        mape = self.mape(y_hat, y)
+        rrse = self.rrse(y_hat, y)
         mse = self.mse(y_hat, y)
-        values = [r2, mape, mse]
+        values = [r2, rrse, mse]
         self.log_dict({f"val_{metric}_{feat}": values[i][j] for i, metric in enumerate(self.val_metrics) for j, feat in enumerate(self.log_features)})
         return loss
     
@@ -132,18 +124,14 @@ class SIRModelWrapper(BaseModel):
             y_hat[:, t, :] = next_state
             X_forward = torch.concat([next_state, beta, gamma], dim=1).unsqueeze(1)
 
-        if self.scale:
-            y = self.scaler.untransform(y)
-            y_hat = self.scaler.untransform(y_hat)
-
         # Extra logging metrics - need to flatten batch dimension
         y = y.flatten(0,1)
         y_hat = y_hat.flatten(0,1)
         r2 = self.r2(y_hat, y)
-        mape = self.mape(y_hat, y)
+        rrse = self.rrse(y_hat, y)
         mae = self.mae(y_hat, y)
         mse = self.mse(y_hat, y)
-        values = [r2, mape, mae, mse]
+        values = [r2, rrse, mae, mse]
         self.log_dict({f"test_{metric}_{feat}": values[i][j] for i, metric in enumerate(self.test_metrics) for j, feat in enumerate(self.log_features)})
     
     @torch.no_grad()

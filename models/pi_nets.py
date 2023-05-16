@@ -26,14 +26,6 @@ class CCP(BaseModel):
         out = self.C(out)
         return out.squeeze()
 
-class CCP_relu(CCP):
-    def forward(self,z):
-        out = F.relu(self.U1(z))
-        for i in range(2, self.n_degree + 1):
-            out = F.relu(getattr(self, 'U{}'.format(i))(z)) * out + out
-        out = self.C(out)
-        return out.squeeze()
-
 class PDC(BaseModel):
     def __init__(self, input_size: int, hidden_size: int, n_degree: int, output_size: int, bias: bool=True, **kwargs):
         """
