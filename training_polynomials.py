@@ -48,7 +48,7 @@ if args.data_generator == "Normal":
     data_args = {"data_dist": f"Normal({str(args.data_mean)},{str(args.data_std)})",
                  "noise": str(args.noise),
                  "polynomial_name": args.polynomial_name}
-    log_name = args.polynomial_name
+    log_name = "Polynomials/" + args.polynomial_name
 else: 
     try:
         data_gen = eval(args.data_generator, globals())(args.n_data, args.noise, args.standardize)
@@ -56,7 +56,7 @@ else:
     except:
         raise NotImplementedError("The generator you are looking for is not implemented.")
     data_args = {"noise": args.noise}
-    log_name = f"Simulations/{type(data_gen).__name__}"
+    log_name = f"Optimization/{type(data_gen).__name__}"
 
 dataloader = PolynomialModule(fn_data=data_gen, batch_size=args.batch_size)
 log_name += "_noise/" if args.noise else "/"
@@ -83,3 +83,4 @@ run_information(logger, data_gen, model, **data_args)
 # Start training
 trainer.fit(model=model, datamodule=dataloader)
 trainer.test(model=model, datamodule=dataloader)
+logger.finalize("success")
