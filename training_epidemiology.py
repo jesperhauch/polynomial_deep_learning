@@ -20,7 +20,6 @@ parser.add_argument("--seq_len", type=int, default=2)
 parser.add_argument("--lag_size", type=int, default=1)
 parser.add_argument("--batch_size", type=int, default=32)
 parser.add_argument("--poly_features", action="store_true")
-parser.add_argument("--apply_scaling", action="store_true")
 
 # Model arguments
 parser.add_argument("--multiplication_net", type=str, required=True)
@@ -39,7 +38,7 @@ assert args.seq_len >= 2, "Sequence must be two or longer."
 # Initialize dataloader and create relevant logging
 dataloader = EpidemiologyModule(n_data=args.n_data, batch_size=args.batch_size, lag_size=args.lag_size, 
                                 seq_len=args.seq_len, poly_features=args.poly_features, n_degree=args.n_degree)
-log_name = type(dataloader).__name__ + "/"
+log_name = "Epidemiology/" + str(args.seq_len) + "len_" + str(args.lag_size) + "lag/"
 
 # Choose model
 model_args = {"input_size": 5, # s, i, r, beta, gamma,
@@ -48,7 +47,6 @@ model_args = {"input_size": 5, # s, i, r, beta, gamma,
               "hidden_size": args.n_neurons,
               "hidden_sizes": [args.n_neurons]*args.n_layers,
               "n_degree": args.n_degree,
-              "scale": args.apply_scaling,
               "loss_fn": args.loss_fn}
 try:
     multiplication_net = eval(args.multiplication_net, globals())
@@ -58,10 +56,8 @@ except Exception as inst:
     raise NotImplementedError("The model {n} is not implemented or imported correctly.")
 
 # Initialize logger and Trainer
-log_name += type(model).__name__ + "/" + multiplication_net.__name__
+log_name += multiplication_net.__name__
 logger = TensorBoardLogger("tb_logs", name=log_name)
-#logger.log_hyperparams(model_args)
-#logger.log_hyperparams()
 trainer = Trainer(limit_train_batches=64, max_epochs=args.epochs, log_every_n_steps=25, logger=logger)
 
 # Start training

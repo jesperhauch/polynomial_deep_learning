@@ -5,7 +5,7 @@ multiplication_net = ["PDCLow", "PDC", "CCP"]
 epochs = 100
 n_degree = 3
 lag_size = 1
-seq_len = 4 
+seq_len = 120 
 loss_fn = ['MSELoss']
 
 for net in multiplication_net:

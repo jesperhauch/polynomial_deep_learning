@@ -1,6 +1,11 @@
 # Epidemiology
 R_net could have been run with n_degree//2 to reduce complexity or the amount of network parameters. It actually seems to increase performance.
 
+## Tensorboard URLs
+
+[Training and validation](http://localhost:6006/?pinnedCards=%5B%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_r2_S%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_r2_I%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_r2_R%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_mape_S%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_mape_I%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_mape_R%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_mse_S%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_mse_I%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22val_mse_R%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22train_loss_epoch%22%7D%5D#timeseries)
+[Testing](http://localhost:6006/?pinnedCards=%5B%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_r2_S%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_r2_I%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_r2_R%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_mape_S%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_mape_I%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_mape_R%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_mae_S%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_mae_I%22%7D%2C%7B%22plugin%22%3A%22scalars%22%2C%22tag%22%3A%22test_mae_R%22%7D%5D#timeseries)
+
 ## 1-step and 1-lag (start state $t_0$ and first state $t_1$)
 ```
 import shlex, subprocess
