@@ -13,15 +13,16 @@
             "justMyCode": true,
         },
         {
-            "name": "Training",
+            "name": "Polynomial Training",
             "type": "python",
             "request": "launch",
-            "program": "training.py",
+            "program": "training_polynomials.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--model=LinearRegression",
-                "--data_gen=Currin"
+                "--model=CCP",
+                "--polynomial=lambda a: a**2",
+                "--polynomial_name=a2"
             ]
         },
         {
@@ -32,25 +33,37 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--model=GradientBoostingRegressor",
-                "--seq_len=3",
+                "--model=LinearRegression",
+                "--poly_features",
+                "--seq_len=25",
                 "--n_data=1000"
+            ]
+        },
+        {
+            "name": "Baseline Polynomial Training",
+            "type": "python",
+            "request": "launch",
+            "program": "baseline_polynomial_training.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--model=LinearRegression",
+                "--data_generator=Currin"
             ]
         },
         {
             "name": "Epidemiology Training",
             "type": "python",
             "request": "launch",
-            "program": "epidemiology_training.py",
+            "program": "training_epidemiology.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--multiplication_net=PDCLow",
+                "--multiplication_net=CCP",
                 "--lag_size=1",
                 "--n_degree=2",
                 "--seq_len=2",
                 "--epochs=5",
-                "--loss_fn=WeightedMSELoss",
                 "--n_data=1000"
             ]
         },
