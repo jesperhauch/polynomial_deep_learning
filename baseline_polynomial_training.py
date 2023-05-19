@@ -5,6 +5,7 @@ from sklearn.pipeline import Pipeline
 from utils.logging_helper import baseline_run_information, baseline_metrics
 from data.polynomials import *
 from data.simulation_functions import *
+
 from lightning.pytorch.loggers import TensorBoardLogger
 from argparse import ArgumentParser
 import warnings
@@ -46,7 +47,7 @@ else:
     except:
         raise NotImplementedError("The generator you are looking for is not implemented.")
     data_args = {"noise": args.noise}
-    log_name = f"Simulations/{type(data_gen).__name__}"
+    log_name = f"Optimization/{type(data_gen).__name__}"
 
 dataloader = PolynomialModule(fn_data=data_gen, batch_size=args.n_data)
 log_name += "_noise/" if args.noise else "/"

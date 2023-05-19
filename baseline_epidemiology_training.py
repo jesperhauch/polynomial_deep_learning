@@ -16,7 +16,6 @@ parser = ArgumentParser()
 parser.add_argument("--seq_len", type=int, default=2)
 parser.add_argument("--lag_size", type=int, default=1)
 parser.add_argument("--poly_features", action="store_true")
-parser.add_argument("--apply_scaling", action="store_true")
 parser.add_argument("--n_data", type=int, default=100000)
 parser.add_argument("--n_degree", type=int, default=3)
 
@@ -28,13 +27,12 @@ args = parser.parse_args()
 assert args.seq_len >= 2, "Sequence must be two or longer."
 
 # Initialize dataloader and create relevant logging
+polynomial_transformation = PolynomialFeatures(degree=args.poly_features, include_bias=False)
 dataloader = EpidemiologyModule(n_data=args.n_data,
                                 batch_size=args.n_data, 
                                 lag_size=args.lag_size, 
-                                seq_len=args.seq_len,
-                                poly_features=args.poly_features, 
-                                n_degree_poly=args.n_degree)
-log_name = type(dataloader).__name__ + "/"
+                                seq_len=args.seq_len)
+log_name = "Epidemiology/" + str(args.seq_len) + "len_" + str(args.lag_size) + "lag"
 
 # Choose model
 try:
@@ -57,6 +55,7 @@ run_kwargs = {"polynomial_features": args.poly_features,
               "n_degree": args.n_degree}
 
 # Training
+print(args.model)
 dataloader.setup("fit")
 train_dataloader = dataloader.train_dataloader()
 beta, gamma, X_train, y_train = next(iter(train_dataloader))
@@ -76,11 +75,13 @@ y_pred = torch.empty_like(y_val)
 for i in range(X_val.shape[1]):
     next_state = torch.Tensor(model.predict(X_forward))
     y_pred[:, i, :] = next_state
+    #next_state = next_state.numpy()
+    #next_state = polynomial_transformation.fit_transform(next_state)
+    #next_state = torch.Tensor(next_state)
     X_forward = torch.concat([next_state, beta, gamma], dim=1)
  
 y_val = y_val.flatten(0,1)
 y_pred = y_pred.flatten(0,1)
-print(args.model)
 baseline_epidemiology_metrics(logger, y_val, y_pred, "fit")
 
 # Testing
@@ -94,6 +95,8 @@ y_pred = torch.empty_like(y_test)
 for i in range(X_test.shape[1]):
     next_state = torch.Tensor(model.predict(X_forward))
     y_pred[:, i, :] = next_state
+    #next_state = next_state.numpy()
+    #next_state = polynomial_transformation.fit_transform(next_state)
     X_forward = torch.concat([next_state, beta, gamma], dim=1)
 
 y_test = y_test.flatten(0,1)
