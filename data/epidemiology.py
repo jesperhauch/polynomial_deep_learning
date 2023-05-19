@@ -3,7 +3,6 @@ import torch
 import pytorch_lightning as pl
 from lightning import LightningDataModule
 from typing import List, Tuple
-from sklearn.preprocessing import PolynomialFeatures
 from torch.distributions import Distribution
 
 class Epidemiology(Dataset):
@@ -13,9 +12,7 @@ class Epidemiology(Dataset):
     Args:
         Dataset (_type_): _description_
     """
-    def __init__(self, beta_distribution: Distribution, gamma_distribution: Distribution, n_data: int, seq_len: int, lag_size: int, poly_features: bool = False, n_degree_poly: int = 2, **kwargs):
-        self.poly_features = poly_features
-        self.n_degree_poly = n_degree_poly
+    def __init__(self, beta_distribution: Distribution, gamma_distribution: Distribution, n_data: int, seq_len: int, lag_size: int, **kwargs):
         self.sequences = [self.generate_sequence(beta_distribution, gamma_distribution, seq_len, lag_size, i) for i in range(n_data)]
 
     def __len__(self):
@@ -67,11 +64,6 @@ class Epidemiology(Dataset):
         target = self.sequences[index]['sequence'][1:]
         features = self.sequences[index]['sequence'][:-1]
         beta, gamma = self.sequences[index]['beta'], self.sequences[index]['gamma']
-        if self.poly_features:
-            poly = PolynomialFeatures(degree=self.n_degree_poly, include_bias=False)
-            features = features.numpy()
-            features = poly.fit_transform(features)
-            features = torch.Tensor(features)
         return beta, gamma, features, target
 
 class EpidemiologyModule(LightningDataModule):
@@ -81,23 +73,21 @@ class EpidemiologyModule(LightningDataModule):
     gamma_train_distribution = torch.distributions.uniform.Uniform(0.002, 0.01)
     beta_test_distribution = torch.distributions.uniform.Uniform(0.1, 0.25)
     gamma_test_distribution = torch.distributions.uniform.Uniform(0.05, 0.1)
-    def __init__(self, n_data: int = 100000, batch_size: int = 32, seq_len: int = 1, lag_size: int = 1, poly_features: bool = False, n_degree_poly: int = 2, **kwargs) -> None:
+    def __init__(self, n_data: int = 100000, batch_size: int = 32, seq_len: int = 1, lag_size: int = 1, **kwargs) -> None:
         self.prepare_data_per_node = True
         self.allow_zero_length_dataloader_with_multiple_devices = False
         self.n_data = n_data
         self.batch_size = batch_size
         self.lag_size = lag_size
         self.seq_len = seq_len
-        self.poly_features = poly_features
-        self.n_degree_poly = n_degree_poly
         self.save_hyperparameters()
 
     def setup(self, stage: str):
         if stage == "fit":
-            self.train_set = Epidemiology(self.beta_train_distribution, self.gamma_train_distribution, int(self.train_ratio*self.n_data), self.seq_len, self.lag_size, self.poly_features, self.n_degree_poly)
-            self.val_set = Epidemiology(self.beta_train_distribution, self.gamma_train_distribution, int(self.test_ratio*self.n_data), self.seq_len, self.lag_size, self.poly_features, self.n_degree_poly)
+            self.train_set = Epidemiology(self.beta_train_distribution, self.gamma_train_distribution, int(self.train_ratio*self.n_data), self.seq_len, self.lag_size)
+            self.val_set = Epidemiology(self.beta_train_distribution, self.gamma_train_distribution, int(self.test_ratio*self.n_data), self.seq_len, self.lag_size)
         if stage == "test":
-            self.test_set = Epidemiology(self.beta_test_distribution, self.gamma_test_distribution, int(self.test_ratio*self.n_data), self.seq_len, self.lag_size, self.poly_features, self.n_degree_poly)
+            self.test_set = Epidemiology(self.beta_test_distribution, self.gamma_test_distribution, int(self.test_ratio*self.n_data), self.seq_len, self.lag_size)
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=False, num_workers=0)
@@ -127,13 +117,3 @@ def generate_sir_from_state(s_t: float, i_t: float, r_t: float, beta: float, gam
                 i.append(i_t)
                 r.append(r_t)
         return torch.stack([torch.Tensor(s), torch.Tensor(i), torch.tensor(r)], dim=1)
-
-
-if __name__ == "__main__":
-    dataloader = EpidemiologyModule(100, 32, 2, 1)
-    dataloader.setup("fit")
-    train = dataloader.train_dataloader()
-    for X, y in train:
-        break
-    #X1, y1 = data.__getitem__(0)
-    pass

@@ -49,7 +49,7 @@ class BaseModel(LightningModule):
 
 class SIRModelWrapper(BaseModel):
     log_features = ["S", "I", "R"]
-    val_metrics = ["r2", "rrse", "mse"]
+    val_metrics = ["r2", "rrse", "mae", "mse"]
     test_metrics = ["r2", "rrse", "mae", "mse"]
     def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, loss_fn: str = "MSELoss", **kwargs):
         super().__init__()
@@ -105,8 +105,9 @@ class SIRModelWrapper(BaseModel):
         y_hat = y_hat.flatten(0,1)
         r2 = self.r2(y_hat, y)
         rrse = self.rrse(y_hat, y)
+        mae = self.mae(y_hat, y)
         mse = self.mse(y_hat, y)
-        values = [r2, rrse, mse]
+        values = [r2, rrse, mae, mse]
         self.log_dict({f"val_{metric}_{feat}": values[i][j] for i, metric in enumerate(self.val_metrics) for j, feat in enumerate(self.log_features)})
         return loss
     
@@ -114,9 +115,6 @@ class SIRModelWrapper(BaseModel):
         beta, gamma, X, y = batch
         beta = beta.reshape(len(X), 1).to(torch.float32)
         gamma = gamma.reshape(len(X), 1).to(torch.float32)
-        if self.scale:
-            X = self.scaler.transform(X)
-            y = self.scaler.transform(y)
         y_hat = torch.zeros_like(y)
         X_forward = torch.concat([X[:,0,:], beta, gamma], dim=1).unsqueeze(1) # Only use first observation
         for t in range(X.size(1)):
