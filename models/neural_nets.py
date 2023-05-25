@@ -6,6 +6,11 @@ from models.base_model import BaseModel
 from models.utils import PolynomialActivation
 
 class FFNN(BaseModel):
+    """Feed forward neural network (FFNN). 
+
+    Args:
+        BaseModel (_type_): _description_
+    """
     def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, **kwargs):
         super().__init__()
         n_layers = [input_size] + hidden_sizes
@@ -20,6 +25,11 @@ class FFNN(BaseModel):
         return self.layers(x).squeeze()
 
 class PANN(FFNN):
+    """Polynomial Activation Neural Network (PANN).
+
+    Args:
+        FFNN (_type_): _description_
+    """
     def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, n_degree: int = 2, **kwargs):
         super().__init__(input_size, hidden_sizes, output_size)
         modules = []
