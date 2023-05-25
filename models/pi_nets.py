@@ -80,9 +80,3 @@ class PDCLow(BaseModel):
             out += out_deg
         out = self.C(out)
         return out.squeeze()
-
-if __name__ == "__main__":
-    model_1 = PDCLow(2, 64, 3, 1)
-    model_2 = PDC(2, 64, 3, 1)
-    model_3 = CCP(2, 64, 3, 1)
-    print(model_1)

@@ -2,6 +2,11 @@ import torch.nn as nn
 import torch
 
 class PolynomialActivation(nn.Module):
+    """Class for implementing polynomial activation for the PANN model.
+
+    Args:
+        nn (_type_): _description_
+    """
     def __init__(self, pow: int = 2):
         super().__init__()
         self.power = pow
@@ -9,18 +14,12 @@ class PolynomialActivation(nn.Module):
     def forward(self, x):
         return torch.pow(x, self.power)
     
-class WeightedMSELoss(nn.Module):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.softmax = nn.Softmax(dim=-1)
-    
-    def forward(self, input, target) -> torch.Tensor:
-        weights = target.mean(axis=0)
-        weights = 1 - self.softmax(weights)
-        return torch.mean(weights * (input - target) ** 2)
-    
-
 class RootRelativeSquaredError(nn.Module):
+    """Root relative squared error metric. Defined as https://www.gepsoft.com/gxpt4kb/Chapter10/Section1/SS07.htm
+
+    Args:
+        nn (_type_): _description_
+    """
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
     

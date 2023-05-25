@@ -32,8 +32,3 @@ class PANN(FFNN):
         modules.append(nn.Linear(hidden_sizes[-1], output_size))
         
         self.layers = nn.Sequential(*modules)
-
-if __name__ == "__main__":
-    model = PANN(5, [64], 1)
-    data = torch.randn(32, 5)
-    model.forward(data)
