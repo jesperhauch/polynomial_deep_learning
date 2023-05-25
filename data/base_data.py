@@ -7,6 +7,8 @@ from data.utils import StandardScaler, shuffle_2d_tensor
 class BaseDataClass:
     noise_dist = dist.normal.Normal(0,1)
     train_quantiles = torch.tensor([0.05, 0.95]) # assumes 90/10 train-test split
+    """ Base data class used for generating arbitrary polynomials and optimization functions.
+    """
     def __init__(self, n_data: int, noise: bool = False, standardize: bool = False):
         # Train test split
         self.train_test_split(n_data)

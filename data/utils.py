@@ -40,6 +40,3 @@ def shuffle_2d_tensor(tensor: torch.Tensor) -> torch.Tensor:
     for i in range(tensor.shape[1]):
         torch.randperm(len(tensor), out=shuffle_idxs[:,i])
     return tensor.gather(0, shuffle_idxs)
-
-if __name__ == "__main__":
-    data = torch.randn((5,2))

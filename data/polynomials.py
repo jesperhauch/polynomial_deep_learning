@@ -6,21 +6,28 @@ from typing import Callable, List, Tuple
 
 class NormalGenerator(BaseDataClass):
     noise_dist = dist.normal.Normal(0,1)
-    means = [-50, 0, 90]
-    stds = [1, 5, 25]
+    means = [-50, 0, 90] # Test means
+    stds = [1, 5, 25] # Test std
+    """Data class for generating arbitrary polynomials with samples from a Gaussian distribution
+    """
     def __init__(self, polynomial: Callable[[int], float], feature_dim: int, n_data: int, mu: float = 0, std: float = 5, noise: bool = False):
         self.polynomial = polynomial
         self.feature_dim = feature_dim
         self.n_data = n_data
         self.noise = noise
         self.train_features = dist.normal.Normal(mu, std).sample((n_data, feature_dim))
-        self.train_targets = self.polynomial(*self.train_features.clone().permute(1,0))
+        self.train_targets = self.polynomial(*self.train_features.clone().permute(1,0)) # passes feature samples through polynomial function
         
         if noise:
             self.train_features = self.train_features + self.noise_dist.sample((n_data, feature_dim))
             self.train_targets = self.train_features + self.noise_dist.sample((n_data,))
 
     def generate_test_data(self) -> List[TensorDataset]:
+        """Method for generating test sets based on test means and stds. 
+
+        Returns:
+            List[TensorDataset]: Outputs list of datasets.
+        """
         test_sets = []
         for mu in self.means:
             for std in self.stds:
@@ -35,6 +42,11 @@ class NormalGenerator(BaseDataClass):
 
 
 class PolynomialModule(LightningDataModule):
+    """General class for loading arbitrary polynomials and optimization functions
+
+    Args:
+        LightningDataModule (_type_): _description_
+    """
     def __init__(self, fn_data: BaseDataClass, batch_size: int = 32):
         self.fn_data = fn_data
         self.batch_size = batch_size
@@ -64,10 +76,3 @@ class PolynomialModule(LightningDataModule):
     
     def test_dataloader(self) -> List[DataLoader]:
         return [DataLoader(dataset, batch_size=self.batch_size, num_workers=0) for dataset in self.test_sets]
-
-if __name__ == "__main__":
-    from simulation_functions import ShortColumn, SulfurModel
-    data_gen = ShortColumn(100000)
-    data = PolynomialModule(data_gen)
-    data.setup("fit")
-    train = data.train_dataloader()

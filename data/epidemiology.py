@@ -6,8 +6,7 @@ from typing import List, Tuple
 from torch.distributions import Distribution
 
 class Epidemiology(Dataset):
-    """Models the number of infected at a timestep from the amount of suscetiple and infected in previous timestep
-    https://allendowney.github.io/ModSimPy/chap11.html
+    """Dataset class for Kendrack-McCormick SIR model (https://allendowney.github.io/ModSimPy/chap11.html)
 
     Args:
         Dataset (_type_): _description_
@@ -24,6 +23,11 @@ class Epidemiology(Dataset):
         assert len(self.r) > 1, "Please choose sequence length and lag size that ensures a simulation with more than one timestep."
 
     def start_state(self):
+        """Generates random start state. Start state cannot havve all zeros.
+
+        Returns:
+            _type_: _description_
+        """
         state_sum = 0
         while state_sum == 0: # ensure no states with all zeros
             random_s = torch.randint(low=0, high=100, size=(1,)).item()
@@ -37,6 +41,18 @@ class Epidemiology(Dataset):
         return s, i, r
 
     def generate_sequence(self, beta_distribution: Distribution, gamma_distribution: Distribution, seq_len: int, lag_size: int, seed: int):
+        """_summary_
+
+        Args:
+            beta_distribution (Distribution): Distribution to sample the infection rate, beta, from.
+            gamma_distribution (Distribution): Distribution to sample the recovery rate, gamma, from.
+            seq_len (int): Length of simulation or sequence, also called T in report.
+            lag_size (int): Size of lag, also called L in report. If increased, the overall length of the simulation is decreased.
+            seed (int): Seed for reproducibility.
+
+        Returns:
+            dict: keys are "sequence", "beta", and "gamma".
+        """
         torch.manual_seed(seed)
         beta = beta_distribution.sample().item()
         gamma = gamma_distribution.sample().item()
@@ -67,6 +83,14 @@ class Epidemiology(Dataset):
         return beta, gamma, features, target
 
 class EpidemiologyModule(LightningDataModule):
+    """Class module to load SIR/Epidemiology data
+
+    Args:
+        LightningDataModule (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     train_ratio = 0.8
     test_ratio = 0.1
     beta_train_distribution = torch.distributions.uniform.Uniform(0.02, 0.09)
@@ -102,18 +126,32 @@ class EpidemiologyModule(LightningDataModule):
         return DataLoader(self.predict_set, batch_size=self.batch_size, shuffle=False, num_workers=0)
 
 def generate_sir_from_state(s_t: float, i_t: float, r_t: float, beta: float, gamma: float, seq_len: int, lag_size: int):
-        s = [s_t]
-        i = [i_t]
-        r = [r_t]
-        for t in range(1, seq_len-1):
-            infected = beta * i_t * s_t
-            recovered = gamma * i_t
-            s_t -= infected
-            i_t += infected - recovered
-            r_t += recovered
+    """Method for generating SIR simulation given parameters
 
-            if t % lag_size == 0:
-                s.append(s_t)
-                i.append(i_t)
-                r.append(r_t)
-        return torch.stack([torch.Tensor(s), torch.Tensor(i), torch.tensor(r)], dim=1)
+    Args:
+        s_t (float): Fraction of population that are susceptible
+        i_t (float): Fraction of population that are infected
+        r_t (float): Fraction of population that are recovered
+        beta (float): Infection rate
+        gamma (float): Recovery rate
+        seq_len (int): Sequence/simulation length T
+        lag_size (int): Lag size L
+
+    Returns:
+        _type_: _description_
+    """
+    s = [s_t]
+    i = [i_t]
+    r = [r_t]
+    for t in range(1, seq_len-1):
+        infected = beta * i_t * s_t
+        recovered = gamma * i_t
+        s_t -= infected
+        i_t += infected - recovered
+        r_t += recovered
+
+        if t % lag_size == 0:
+            s.append(s_t)
+            i.append(i_t)
+            r.append(r_t)
+    return torch.stack([torch.Tensor(s), torch.Tensor(i), torch.tensor(r)], dim=1)
