@@ -1,6 +1,6 @@
 from models.neural_nets import *
 from models.pi_nets import *
-from models.base_model import SIRModelWrapper
+from models.base_model import SIRModelWrapper, SIR_PANN_Wrapper
 from models.utils import *
 from utils.model_utils import *
 from data.epidemiology import *
@@ -44,15 +44,18 @@ model_args = {"input_size": 5, # s, i, r, beta, gamma,
               "output_size": 1, # 3 neural networks with one output each
               "n_layers": args.n_layers,
               "hidden_size": args.n_neurons,
-              "hidden_sizes": [args.n_neurons]*args.n_layers,
               "n_degree": args.n_degree,
               "loss_fn": args.loss_fn}
-try:
+if args.multiplication_net == "PANN":
     multiplication_net = eval(args.multiplication_net, globals())
-    model = SIRModelWrapper(multiplication_net, **model_args)
-except Exception as inst:
-    print(inst)
-    raise NotImplementedError("The model {n} is not implemented or imported correctly.")
+    model = SIR_PANN_Wrapper(multiplication_net, **model_args)
+else:
+    try:
+        multiplication_net = eval(args.multiplication_net, globals())
+        model = SIRModelWrapper(multiplication_net, **model_args)
+    except Exception as inst:
+        print(inst)
+        raise NotImplementedError("The model {n} is not implemented or imported correctly.")
 
 # Initialize logger and Trainer
 log_name += multiplication_net.__name__
