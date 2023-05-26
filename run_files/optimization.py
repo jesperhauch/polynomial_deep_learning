@@ -10,7 +10,7 @@ epochs = 100
 
 for sim, n_degrees in simulations.items():
     for model in models:
-        command = 'python training_polynomials.py --model {m} --data_generator {sim}'.format(m=model, sim=sim)
+        command = 'python training/training_polynomials.py --model {m} --data_generator {sim}'.format(m=model, sim=sim)
         command += ' --n_degree {deg}'.format(deg=n_degrees)
         command += ' --epochs {epoch}'.format(epoch=epochs)
         commands.append(command)

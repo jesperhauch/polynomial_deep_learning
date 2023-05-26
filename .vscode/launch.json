@@ -16,7 +16,7 @@
             "name": "Polynomial Training",
             "type": "python",
             "request": "launch",
-            "program": "training_polynomials.py",
+            "program": "training/training_polynomials.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
@@ -29,7 +29,7 @@
             "name": "Baseline Epidemiology Training",
             "type": "python",
             "request": "launch",
-            "program": "baseline_epidemiology_training.py",
+            "program": "training/baseline_epidemiology_training.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
@@ -43,7 +43,7 @@
             "name": "Baseline Polynomial Training",
             "type": "python",
             "request": "launch",
-            "program": "baseline_polynomial_training.py",
+            "program": "training/baseline_polynomial_training.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
@@ -55,7 +55,7 @@
             "name": "Epidemiology Training",
             "type": "python",
             "request": "launch",
-            "program": "training_epidemiology.py",
+            "program": "training/training_epidemiology.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [

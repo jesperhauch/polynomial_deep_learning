@@ -9,7 +9,7 @@ simulations = {"Currin": 2, "Bukin06": 2, "Price03": 4,
 
 for sim, n_degrees in simulations.items():
     for model in models:
-        command = 'python baseline_polynomial_training.py --model {m} --data_generator {sim}'.format(m=model, sim=sim)
+        command = 'python training/baseline_polynomial_training.py --model {m} --data_generator {sim}'.format(m=model, sim=sim)
         command += ' --n_degree {deg}'.format(deg=n_degrees)
         commands.append(command)
 

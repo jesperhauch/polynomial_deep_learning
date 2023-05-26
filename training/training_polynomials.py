@@ -3,7 +3,7 @@ from models.pi_nets import *
 from utils.model_utils import *
 from utils.logging_helper import run_information
 from data.polynomials import *
-from data.simulation_functions import *
+from data.optimization_functions import *
 from data.epidemiology import *
 from lightning import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger

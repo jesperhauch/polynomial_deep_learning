@@ -4,7 +4,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
 from utils.logging_helper import baseline_run_information, baseline_metrics
 from data.polynomials import *
-from data.simulation_functions import *
+from data.optimization_functions import *
 
 from lightning.pytorch.loggers import TensorBoardLogger
 from argparse import ArgumentParser

@@ -18,7 +18,7 @@ epochs = 30
 
 for polynomial_name, (polynomial, n_degree) in polynomial_dict.items():
     for model in models:
-        command = 'python training_polynomials.py --model {m} --polynomial "{poly}" --polynomial_name {poly_name}'.format(m=model, poly=polynomial, poly_name=polynomial_name)
+        command = 'python training/training_polynomials.py --model {m} --polynomial "{poly}" --polynomial_name {poly_name}'.format(m=model, poly=polynomial, poly_name=polynomial_name)
         command += ' --n_degree {deg}'.format(deg=n_degree)
         command += ' --epochs {epoch}'.format(epoch=epochs)
         commands.append(command)
