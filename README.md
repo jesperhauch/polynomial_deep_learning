@@ -3,9 +3,6 @@ This repository is dedicated to the work done in connection with my master thesi
 
 The project concerns the use of neural networks in simulation metamodeling. More specifically, it custom neural networks that can fit higher-order polynomials and generalize to unseen inputs. Neural network architectures Polynomial Activation Neural Network (PANN), Coupled decomposition (CCP) from the [$\Pi$-Nets paper](https://arxiv.org/abs/2006.13026) [(Github)](https://github.com/grigorisg9gr/polynomial_nets), PDC from [Augmenting Deep Classifiers with Polynomial Neural Networks](https://arxiv.org/pdf/2104.07916.pdf) and PDCLow based on PDC.
 
-## Folder Structure
- 
-
 ## Installing
 To install the project's dependencies, feel free to either use:
 1. *environment.yaml* (requires conda) - `conda env create -f environment.yml`
@@ -13,8 +10,24 @@ To install the project's dependencies, feel free to either use:
 
 If you prefer option 2, please ensure to use Python 3.10 to avoid potential conflicts with dependency versions.
 
-## Running models
+## Folder Structure
+The folder structure of this repository does not follow a conventional 
 
+```
+├── .vscode
+├── data
+├── models
+├── notebooks
+├── scripts
+├── training
+├── utils
+├── .gitignore
+├── environment.yml
+├── README.md
+└── requirements.txt
+```
+
+## Example runs
 
 ## Logging
 Logging is done with Tensorboard through Lightning. Lightning automatically creates a `tb_logs` folder the Tensorboard log files. To view finished and running runs, use the following command:
