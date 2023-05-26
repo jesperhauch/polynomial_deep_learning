@@ -58,7 +58,7 @@ try:
 except:
     raise NotImplementedError("The model {n} is not implemented or imported correctly.")
 
-log_name += + type(model).__name__
+log_name += type(model).__name__
 
 # Add polynomial features for data if relevant
 if args.polynomial_features:
