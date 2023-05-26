@@ -3,7 +3,6 @@ import torch.nn as nn
 from lightning import LightningModule
 from torchmetrics import MultioutputWrapper, R2Score, MeanAbsoluteError, MeanSquaredError 
 from typing import List, Tuple
-from models.base_model import BaseModel
 from models.utils import RootRelativeSquaredError
 from torch.nn import MSELoss
 
