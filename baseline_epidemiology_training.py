@@ -32,22 +32,20 @@ dataloader = EpidemiologyModule(n_data=args.n_data,
                                 batch_size=args.n_data, 
                                 lag_size=args.lag_size, 
                                 seq_len=args.seq_len)
-log_name = "Epidemiology/" + str(args.seq_len) + "len_" + str(args.lag_size) + "lag"
+log_name = "Epidemiology/" + str(args.seq_len) + "len_" + str(args.lag_size) + "lag/"
 
 # Choose model
 try:
     if args.model == "GradientBoostingRegressor": # Does not support multiple outputs natively
         model = MultiOutputRegressor(eval(args.model, globals())())
+        log_name += "GradientBoostingRegressor"
     else:
         model = eval(args.model, globals())()
+        log_name += type(model).__name__
 except:
     raise NotImplementedError("The model {n} is not implemented or imported correctly.")
 
-log_name += "Baselines/" + type(model).__name__
 
-# Add polynomial features for data if relevant
-if args.poly_features:
-    log_name += "_polynomial"
 
 # Initialize logger
 logger = TensorBoardLogger("tb_logs", name=log_name)

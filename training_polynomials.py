@@ -1,6 +1,5 @@
 from models.neural_nets import *
 from models.pi_nets import *
-from models.baselines import *
 from utils.model_utils import *
 from utils.logging_helper import run_information
 from data.polynomials import *
@@ -40,7 +39,6 @@ parser.add_argument("--epochs", type=int, default=30)
 args = parser.parse_args()
 
 # Initialize dataloader and create relevant logging
-
 if args.data_generator == "Normal":
     polynomial = eval(args.polynomial, globals())
     in_dim = polynomial.__code__.co_argcount

@@ -1,6 +1,5 @@
 from models.neural_nets import *
 from models.pi_nets import *
-from models.baselines import *
 from models.base_model import SIRModelWrapper
 from models.utils import *
 from utils.model_utils import *
@@ -26,7 +25,7 @@ parser.add_argument("--multiplication_net", type=str, required=True)
 parser.add_argument("--n_neurons", type=int, default=64)
 parser.add_argument("--n_layers", type=int, default=1)
 parser.add_argument("--n_degree", type=int, default=3)
-parser.add_argument("--loss_fn", type=str, default = "MSELoss", choices=["MSELoss", "WeightedMSELoss"])
+parser.add_argument("--loss_fn", type=str, default = "MSELoss", choices=["MSELoss"])
 
 # Trainer/logger arguments
 parser.add_argument("--epochs", type=int, default=30)
