@@ -1,4 +1,5 @@
-# Learning Polynomials
+# Run files
+All the files in this folder must be run from the root directory, since .py files from the training folder is accessed. The purpose of the run files is to automate the execution of multiple runs/experiments.
 
 ## Arbitrary Polynomials
 Running all experiments in parallel.
