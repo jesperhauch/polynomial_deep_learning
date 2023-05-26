@@ -1,4 +1,5 @@
 tb_logs/
 */__pycache__/*
 .vscode/*
-report/*
+report/
+*.egg-info
