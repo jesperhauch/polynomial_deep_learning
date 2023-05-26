@@ -3,6 +3,7 @@ import torch.nn as nn
 from lightning import LightningModule
 from torchmetrics import MultioutputWrapper, R2Score, MeanAbsoluteError, MeanSquaredError 
 from typing import List, Tuple
+from models.base_model import BaseModel
 from models.utils import RootRelativeSquaredError
 from torch.nn import MSELoss
 
@@ -144,11 +145,28 @@ class SIRModelWrapper(BaseModel):
             X_forward = torch.concat([next_state, beta, gamma], dim=-1)
         
         return torch.stack(simulation)
-    
-if __name__ == "__main__":
-    from models.pi_nets import CCP
-    from torch.nn.functional import softmax
-    model = SIRModelWrapper(CCP, 5, 64, 2)
-    data = torch.randn(3)
-    data = softmax(data, dim=0)
-    model.generate_step(5, data, 0.05, 0.017)
+
+class SIR_PANN_Wrapper(SIRModelWrapper):
+    """Model wrapper for PANN model in SIR simulation
+
+    Args:
+        SIRModelWrapper (_type_): _description_
+    """
+    def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, loss_fn: str = "MSELoss", n_layers: int = 1, **kwargs):
+        super().__init__()
+        self.r2 = MultioutputWrapper(R2Score(), num_outputs=3)
+        self.mae = MultioutputWrapper(MeanAbsoluteError(), num_outputs=3)
+        self.rrse = MultioutputWrapper(RootRelativeSquaredError(), num_outputs=3)
+        self.mse = MultioutputWrapper(MeanSquaredError(), num_outputs=3)
+        try:
+            self.loss = eval(loss_fn, globals())()
+        except Exception as inst:
+            print(inst)
+            raise NotImplementedError("The loss function {n} is not implemented or imported correctly.")
+        
+        self.s_net = multiplication_net(input_size, [hidden_size]*n_layers, 1, n_degree)
+        self.i_net = multiplication_net(input_size, [hidden_size]*n_layers, 1, n_degree)
+        self.r_net = multiplication_net(input_size, [hidden_size]*n_layers, 1, n_degree)
+
+        self.softmax = nn.Softmax(dim=-1)
+        self.save_hyperparameters()
