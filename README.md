@@ -4,11 +4,12 @@ This repository is dedicated to the work done in connection with my master thesi
 The project concerns the use of neural networks in simulation metamodeling. More specifically, it custom neural networks that can fit higher-order polynomials and generalize to unseen inputs. Neural network architectures Polynomial Activation Neural Network (PANN), Coupled decomposition (CCP) from the [$\Pi$-Nets paper](https://arxiv.org/abs/2006.13026) [(Github)](https://github.com/grigorisg9gr/polynomial_nets), PDC from [Augmenting Deep Classifiers with Polynomial Neural Networks](https://arxiv.org/pdf/2104.07916.pdf) and PDCLow based on PDC.
 
 ## Installing
-To install the project's dependencies, feel free to either use:
-1. *environment.yaml* (requires conda) - `conda env create -f environment.yml`
-2. *requirements.txt* - `pip install -r requirements.txt`
-
-If you prefer option 2, please ensure to use Python 3.10 to avoid potential conflicts with dependency versions.
+To install this project and run it on your own machine, please do the following:
+1. Install dependencies - Use one of the two below
+    - *environment.yaml* (requires conda) - `conda env create -f environment.yml`
+    - *requirements.txt* - `pip install -r requirements.txt` (please use Python 3.10)
+2. Install `setup.py` to ensure proper imports.
+    - `pip install -e .`
 
 ## Folder Structure
 The folder structure of this repository does not follow a conventional 
@@ -24,7 +25,8 @@ The folder structure of this repository does not follow a conventional
 ├── .gitignore
 ├── environment.yml
 ├── README.md
-└── requirements.txt
+├── requirements.txt
+└── setup.py
 ```
 
 ## Example runs
