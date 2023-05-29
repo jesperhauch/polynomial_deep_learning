@@ -152,7 +152,7 @@ class SIR_PANN_Wrapper(SIRModelWrapper):
         SIRModelWrapper (_type_): _description_
     """
     def __init__(self, multiplication_net: BaseModel, input_size: int, hidden_size: int, n_degree: int, loss_fn: str = "MSELoss", n_layers: int = 1, **kwargs):
-        super().__init__()
+        super(SIRModelWrapper, self).__init__()
         self.r2 = MultioutputWrapper(R2Score(), num_outputs=3)
         self.mae = MultioutputWrapper(MeanAbsoluteError(), num_outputs=3)
         self.rrse = MultioutputWrapper(RootRelativeSquaredError(), num_outputs=3)
