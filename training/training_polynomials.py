@@ -30,7 +30,6 @@ parser.add_argument("--n_neurons", type=int, default=64)
 parser.add_argument("--n_layers", type=int, default=1)
 parser.add_argument("--n_degree", type=int, default=2)
 parser.add_argument("--out_dim", type=int, default=1)
-parser.add_argument("--relu", action="store_true")
 
 # Trainer/logger arguments
 parser.add_argument("--epochs", type=int, default=30)
