@@ -1,6 +1,4 @@
 import torch.nn as nn
-import pytorch_lightning as pl
-import torch
 from typing import List
 from models.base_model import BaseModel
 from models.utils import PolynomialActivation
@@ -17,6 +15,26 @@ class FFNN(BaseModel):
         modules = []
         for i in range(len(n_layers)-1):
             modules.append(nn.Linear(n_layers[i], n_layers[i+1]))
+
+        modules.append(nn.Linear(n_layers[-1], output_size))
+        self.layers = nn.Sequential(*modules)
+
+    def forward(self, x):
+        return self.layers(x).squeeze()
+    
+class FFNN_act(FFNN):
+    """Feed forward neural network (FFNN) with ReLU activation. 
+
+    Args:
+        BaseModel (_type_): _description_
+    """
+    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int, **kwargs):
+        super().__init__(input_size, hidden_sizes, output_size)
+        n_layers = [input_size] + hidden_sizes
+        modules = []
+        for i in range(len(n_layers)-1):
+            modules.append(nn.Linear(n_layers[i], n_layers[i+1]))
+            modules.append(nn.ReLU())
 
         modules.append(nn.Linear(n_layers[-1], output_size))
         self.layers = nn.Sequential(*modules)
