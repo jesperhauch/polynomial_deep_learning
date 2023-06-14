@@ -3,4 +3,5 @@ tb_logs/
 .vscode/*
 report/
 notebooks/
+archive/
 *.egg-info
