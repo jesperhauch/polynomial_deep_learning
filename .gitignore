@@ -1,6 +1,6 @@
 tb_logs/
 */__pycache__/*
-.vscode/*
+.vscode/
 report/
 notebooks/
 archive/
