@@ -2,5 +2,6 @@ tb_logs/
 */__pycache__/*
 report/
 notebooks/
+notes/
 archive/
 *.egg-info
