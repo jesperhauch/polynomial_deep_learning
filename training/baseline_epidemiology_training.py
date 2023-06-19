@@ -1,5 +1,6 @@
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
@@ -46,7 +47,6 @@ except:
     raise NotImplementedError("The model {n} is not implemented or imported correctly.")
 
 
-
 # Initialize logger
 logger = TensorBoardLogger("tb_logs", name=log_name)
 run_kwargs = {"polynomial_features": args.poly_features,
@@ -73,9 +73,6 @@ y_pred = torch.empty_like(y_val)
 for i in range(X_val.shape[1]):
     next_state = torch.Tensor(model.predict(X_forward))
     y_pred[:, i, :] = next_state
-    #next_state = next_state.numpy()
-    #next_state = polynomial_transformation.fit_transform(next_state)
-    #next_state = torch.Tensor(next_state)
     X_forward = torch.concat([next_state, beta, gamma], dim=1)
  
 y_val = y_val.flatten(0,1)
@@ -93,8 +90,6 @@ y_pred = torch.empty_like(y_test)
 for i in range(X_test.shape[1]):
     next_state = torch.Tensor(model.predict(X_forward))
     y_pred[:, i, :] = next_state
-    #next_state = next_state.numpy()
-    #next_state = polynomial_transformation.fit_transform(next_state)
     X_forward = torch.concat([next_state, beta, gamma], dim=1)
 
 y_test = y_test.flatten(0,1)

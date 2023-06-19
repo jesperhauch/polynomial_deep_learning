@@ -1,5 +1,6 @@
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import Pipeline
 from utils.logging_helper import baseline_run_information, baseline_metrics
