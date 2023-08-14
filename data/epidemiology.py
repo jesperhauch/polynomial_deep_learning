@@ -1,8 +1,7 @@
 from torch.utils.data import Dataset, DataLoader
 import torch
-import pytorch_lightning as pl
 from lightning import LightningDataModule
-from typing import List, Tuple
+from typing import Tuple
 from torch.distributions import Distribution
 
 class Epidemiology(Dataset):
