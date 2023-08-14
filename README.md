@@ -1,5 +1,5 @@
 # Simulation Metamodeling with Neural Networks
-This repository is dedicated to the work done in connection with my master thesis at Technical University of Denmark. The code is written in [Lightning](https://lightning.ai/docs/pytorch/latest/) and can be made compatible to run on GPU but this is not implemented currently.
+This repository is dedicated to the work done in connection with my master thesis at Technical University of Denmark ([arXiv submission]( https://arxiv.org/abs/2307.10892)). The code is written in [Lightning](https://lightning.ai/docs/pytorch/latest/) and can be made compatible to run on GPU but this is not implemented currently.
 
 The project concerns the use of neural networks in simulation metamodeling. More specifically, the use of custom neural networks that can fit higher-order polynomials and generalize to out-of-distribution inputs. Neural network architectures are Polynomial Activation Neural Network (PANN), Coupled decomposition (CCP) from the [$\Pi$-Nets paper](https://arxiv.org/abs/2006.13026) [(Github)](https://github.com/grigorisg9gr/polynomial_nets), PDC from [Augmenting Deep Classifiers with Polynomial Neural Networks](https://arxiv.org/pdf/2104.07916.pdf) and PDCLow based on PDC.
 
