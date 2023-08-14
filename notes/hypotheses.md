@@ -1,4 +1,0 @@
-- Non-deterministic training breaks model for complicated polynomials
-- Non-deterministic training works better for Normal(0,1)
-- Models are able to fit up until 7 variables so far
-- Performance is starting to break for 6th degree polynomials
